@@ -1,0 +1,1977 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Panini 2026">
+    <title>Álbum Panini Copa 2026</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            padding-top: max(12px, env(safe-area-inset-top));
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            padding-left: max(12px, env(safe-area-inset-left));
+            padding-right: max(12px, env(safe-area-inset-right));
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        h1 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            text-align: center;
+            color: #1a1a1a;
+            flex-shrink: 0;
+        }
+        
+        .filtros {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        
+        input[type="text"], select {
+            flex: 1;
+            min-width: 140px;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        select {
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23333' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 32px;
+        }
+        
+        input[type="text"]::placeholder {
+            color: #999;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 10px 8px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .figurinhas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+            gap: 6px;
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .figurinha-card {
+            background: rgba(26,47,74,0.8);
+            border: 2px solid rgba(255,215,0,0.2);
+            border-radius: 6px;
+            padding: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100px;
+        }
+        
+        .figurinha-card:active {
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
+        
+        .figurinha-card.tenho {
+            border-color: #4caf50;
+            background: #f1f8f4;
+        }
+        
+        .figurinha-card.repetida {
+            border-color: #2196f3;
+            background: #e3f2fd;
+        }
+        
+        .flag {
+            height: 20px;
+            width: auto;
+            border-radius: 2px;
+            margin-bottom: 3px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .jogador {
+            font-size: 10px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1px;
+            word-break: break-word;
+            line-height: 1.2;
+            min-height: 13px;
+        }
+        
+        .selecao {
+            font-size: 9px;
+            color: #b0bec5;
+            margin-bottom: 2px;
+        }
+        
+        .codigo {
+            font-size: 8px;
+            color: rgba(255,215,0,0.5);
+            margin-bottom: 3px;
+        }
+        
+        .badges {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            font-size: 9px;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .badge-tenho {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .badge-falta {
+            background: #f44336;
+            color: white;
+        }
+        
+        .badge-rep {
+            background: #2196f3;
+            color: white;
+        }
+        
+        @media (max-width: 480px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+            
+            .stat-card {
+                padding: 8px 6px;
+            }
+            
+            .stat-label {
+                font-size: 10px;
+            }
+            
+            .stat-value {
+                font-size: 16px;
+            }
+            
+            h1 {
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+        }
+    
+        .custom-select {
+            position: relative;
+            flex: 1;
+            min-width: 140px;
+        }
+        .custom-select-trigger {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .custom-select-trigger .arrow {
+            color: #999;
+            font-size: 10px;
+        }
+        .custom-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 280px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 2px;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .custom-select.open .custom-options {
+            display: block;
+        }
+        .custom-option {
+            padding: 8px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .custom-option:hover {
+            background: #f0f0f0;
+        }
+        .opt-flag {
+            width: 22px;
+            height: 16px;
+            object-fit: cover;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .opt-flag-empty {
+            width: 22px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+    
+        /* === COPA 2026 THEME OVERRIDE === */
+        body {
+            background: linear-gradient(135deg, #0a1628 0%, #1a2f4a 50%, #0f2438 100%) !important;
+            min-height: 100vh !important;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 10%, rgba(255,215,0,0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(0,255,136,0.06) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(255,107,53,0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container {
+            background: rgba(26, 47, 74, 0.6) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 215, 0, 0.25) !important;
+            box-shadow: 
+                0 8px 32px rgba(0,0,0,0.4),
+                0 0 60px rgba(255,215,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.05) !important;
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 30%, #00ff88 70%, #ffd700 100%) !important;
+            background-size: 200% auto !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+            font-weight: 900 !important;
+            font-size: 26px !important;
+            letter-spacing: 1px !important;
+            animation: shine 3s linear infinite !important;
+            text-shadow: 0 4px 20px rgba(255,215,0,0.3) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 12px !important;
+            margin-bottom: 4px !important;
+        }
+        
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+        
+        .header-tacas {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 12px;
+            animation: float 4s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        
+        /* Stats com glassmorphism */
+        .stats {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .stat-box {
+            background: rgba(255, 215, 0, 0.05) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255, 215, 0, 0.3) !important;
+            box-shadow: 
+                0 4px 15px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.05) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .stat-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,215,0,0.15);
+            border-color: rgba(255, 215, 0, 0.5) !important;
+        }
+        
+        .stat-label {
+            color: #b0bec5 !important;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 9px !important;
+        }
+        
+        .stat-value {
+            font-size: 24px !important;
+            font-weight: 900 !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+        }
+        
+        /* Cores específicas - Paleta Copa 2026 */
+        #totalCount {
+            background: linear-gradient(135deg, #ffd700, #ffed4e) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+        }
+        
+        #temCount {
+            background: linear-gradient(135deg, #00ff88, #00cc6a) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            color: transparent !important;
+        }
+        
+        #faltamCount {
+            background: linear-gradient(135deg, #ff6b35, #ff8c42) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            color: transparent !important;
+        }
+        
+        #repetidaCount {
+            background: linear-gradient(135deg, #4fc3f7, #29b6f6) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            color: transparent !important;
+        }
+        
+        /* Stat boxes - bordas com cor de cada categoria */
+        .stat-box:nth-child(1) {
+            border-color: rgba(255, 215, 0, 0.4) !important;
+            background: rgba(255, 215, 0, 0.05) !important;
+        }
+        .stat-box:nth-child(1):hover {
+            border-color: #ffd700 !important;
+            box-shadow: 0 6px 20px rgba(255,215,0,0.3) !important;
+        }
+        
+        .stat-box:nth-child(2) {
+            border-color: rgba(0, 255, 136, 0.4) !important;
+            background: rgba(0, 255, 136, 0.05) !important;
+        }
+        .stat-box:nth-child(2):hover {
+            border-color: #00ff88 !important;
+            box-shadow: 0 6px 20px rgba(0,255,136,0.3) !important;
+        }
+        
+        .stat-box:nth-child(3) {
+            border-color: rgba(255, 107, 53, 0.4) !important;
+            background: rgba(255, 107, 53, 0.05) !important;
+        }
+        .stat-box:nth-child(3):hover {
+            border-color: #ff6b35 !important;
+            box-shadow: 0 6px 20px rgba(255,107,53,0.3) !important;
+        }
+        
+        .stat-box:nth-child(4) {
+            border-color: rgba(79, 195, 247, 0.4) !important;
+            background: rgba(79, 195, 247, 0.05) !important;
+        }
+        .stat-box:nth-child(4):hover {
+            border-color: #4fc3f7 !important;
+            box-shadow: 0 6px 20px rgba(79,195,247,0.3) !important;
+        }
+        
+        /* Inputs glassmorphism */
+        input[type="text"], select, .custom-select-trigger {
+            background: rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255, 215, 0, 0.25) !important;
+            color: #ffffff !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        input[type="text"]::placeholder {
+            color: rgba(176, 190, 197, 0.6) !important;
+        }
+        
+        input[type="text"]:focus, select:focus, .custom-select-trigger:hover {
+            border-color: #ffd700 !important;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+            outline: none !important;
+        }
+        
+        /* Custom select dropdown */
+        .custom-options {
+            background: rgba(15, 36, 56, 0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 215, 0, 0.3) !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+        }
+        
+        .custom-option {
+            color: #ffffff !important;
+            transition: all 0.2s !important;
+        }
+        
+        .custom-option:hover {
+            background: rgba(255, 215, 0, 0.15) !important;
+            border-left: 3px solid #ffd700 !important;
+            padding-left: 9px !important;
+        }
+        
+        /* Cards de figurinha */
+        .figurinha-card {
+            background: rgba(26, 47, 74, 0.6) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            border: 1px solid rgba(255, 215, 0, 0.2) !important;
+            box-shadow: 
+                0 4px 12px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.05) !important;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+        
+        .figurinha-card:hover {
+            transform: translateY(-3px) scale(1.02);
+            border-color: #ffd700 !important;
+            box-shadow: 
+                0 8px 25px rgba(255, 215, 0, 0.25),
+                0 0 20px rgba(255, 215, 0, 0.15) !important;
+        }
+        
+        /* TENHO - Verde vibrante MUITO destacado */
+        .figurinha-card.tenho {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.35) 0%, rgba(0, 200, 100, 0.5) 100%) !important;
+            border: 3px solid #00ff88 !important;
+            box-shadow: 
+                0 6px 20px rgba(0, 255, 136, 0.5),
+                0 0 30px rgba(0, 255, 136, 0.4),
+                inset 0 0 20px rgba(0, 255, 136, 0.15) !important;
+            transform: scale(1.02);
+        }
+        
+        .figurinha-card.tenho .jogador {
+            color: #ffffff !important;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.8), 0 1px 3px rgba(0,0,0,0.8) !important;
+            font-weight: 800 !important;
+        }
+        
+        .figurinha-card.tenho .selecao {
+            color: #b8ffd9 !important;
+            font-weight: 600 !important;
+        }
+        
+        .figurinha-card.tenho .codigo {
+            color: #00ff88 !important;
+            font-weight: 800 !important;
+        }
+        
+        .figurinha-card.tenho:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.5) 0%, rgba(0, 220, 110, 0.65) 100%) !important;
+            box-shadow: 
+                0 10px 35px rgba(0, 255, 136, 0.7),
+                0 0 50px rgba(0, 255, 136, 0.5) !important;
+            transform: translateY(-4px) scale(1.05);
+        }
+        
+        /* REPETIDA - Laranja vibrante MUITO destacado */
+        .figurinha-card.repetida {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.35) 0%, rgba(255, 140, 50, 0.5) 100%) !important;
+            border: 3px solid #ff6b35 !important;
+            box-shadow: 
+                0 6px 20px rgba(255, 107, 53, 0.5),
+                0 0 30px rgba(255, 107, 53, 0.4),
+                inset 0 0 20px rgba(255, 107, 53, 0.15) !important;
+            transform: scale(1.02);
+            animation: pulseRepetida 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulseRepetida {
+            0%, 100% { box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5), 0 0 30px rgba(255, 107, 53, 0.4), inset 0 0 20px rgba(255, 107, 53, 0.15); }
+            50% { box-shadow: 0 6px 25px rgba(255, 107, 53, 0.7), 0 0 45px rgba(255, 107, 53, 0.6), inset 0 0 25px rgba(255, 107, 53, 0.25); }
+        }
+        
+        .figurinha-card.repetida .jogador {
+            color: #ffffff !important;
+            text-shadow: 0 0 10px rgba(255, 107, 53, 0.8), 0 1px 3px rgba(0,0,0,0.8) !important;
+            font-weight: 800 !important;
+        }
+        
+        .figurinha-card.repetida .selecao {
+            color: #ffd4bd !important;
+            font-weight: 600 !important;
+        }
+        
+        .figurinha-card.repetida .codigo {
+            color: #ff6b35 !important;
+            font-weight: 800 !important;
+        }
+        
+        .figurinha-card.repetida:hover {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.5) 0%, rgba(255, 150, 60, 0.65) 100%) !important;
+            box-shadow: 
+                0 10px 35px rgba(255, 107, 53, 0.7),
+                0 0 50px rgba(255, 107, 53, 0.5) !important;
+            transform: translateY(-4px) scale(1.05);
+        }
+        
+        .jogador {
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+        }
+        
+        .selecao {
+            color: #b0bec5 !important;
+        }
+        
+        .codigo {
+            color: rgba(255, 215, 0, 0.6) !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.5px !important;
+        }
+        
+        .badges {
+            font-size: 14px !important;
+        }
+        
+        /* Sync status */
+        #syncStatus {
+            color: #00ff88 !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 215, 0, 0.5); }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-tacas"><svg width="40" height="55" viewBox="0 0 40 55" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;filter:drop-shadow(0 2px 8px rgba(255,215,0,0.5));">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fff8b0;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#ffd700;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#daa520;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b8860b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="goldShine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.6" />
+      <stop offset="50%" style="stop-color:#ffd700;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#daa520;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Base inferior -->
+  <rect x="12" y="48" width="16" height="5" rx="1" fill="url(#goldGrad)"/>
+  <rect x="10" y="44" width="20" height="5" rx="1" fill="url(#goldShine)"/>
+  <!-- Pedestal -->
+  <path d="M 14 44 L 26 44 L 25 38 L 15 38 Z" fill="url(#goldGrad)"/>
+  <!-- Corpo principal da taça (formato globo) -->
+  <ellipse cx="20" cy="22" rx="11" ry="13" fill="url(#goldShine)"/>
+  <!-- Detalhe esférico do globo -->
+  <ellipse cx="20" cy="20" rx="9" ry="11" fill="none" stroke="#b8860b" stroke-width="0.5" opacity="0.4"/>
+  <!-- Forma "torcida" característica -->
+  <path d="M 11 15 Q 15 8 20 6 Q 25 8 29 15 L 28 25 Q 24 30 20 32 Q 16 30 12 25 Z" fill="url(#goldShine)" opacity="0.95"/>
+  <!-- Linhas de detalhe vertical -->
+  <path d="M 20 6 Q 18 18 20 32" stroke="#b8860b" stroke-width="0.3" fill="none" opacity="0.5"/>
+  <path d="M 14 9 Q 13 18 17 30" stroke="#b8860b" stroke-width="0.3" fill="none" opacity="0.5"/>
+  <path d="M 26 9 Q 27 18 23 30" stroke="#b8860b" stroke-width="0.3" fill="none" opacity="0.5"/>
+  <!-- Topo arredondado -->
+  <ellipse cx="20" cy="7" rx="4" ry="2" fill="url(#goldShine)"/>
+  <!-- Brilho destacado -->
+  <ellipse cx="16" cy="14" rx="2.5" ry="4" fill="#ffffff" opacity="0.3"/>
+  <!-- Conexão pedestal-corpo -->
+  <rect x="17" y="33" width="6" height="6" fill="url(#goldGrad)"/>
+</svg></div>
+        <h1>ÁLBUM PANINI COPA 2026</h1>
+        
+        <div class="filtros">
+            <input type="text" id="searchInput" placeholder="Código ou jogador...">
+            <div class="custom-select" id="paisSelectWrapper">
+                <input type="hidden" id="paisSelect" value="">
+                <div class="custom-select-trigger" id="paisTrigger">
+                    <span id="paisLabel">Todos os Países</span>
+                    <span class="arrow">▾</span>
+                </div>
+                <div class="custom-options" id="paisOptions">
+<div class="custom-option" data-value="">Todos os Países</div>
+                    <div class="custom-option" data-value="FIFA World Cup"><span class="opt-flag-empty"></span><span>FIFA World Cup</span></div>
+                    <div class="custom-option" data-value="Mexico"><img src="https://flagcdn.com/w40/mx.png" class="opt-flag"><span>Mexico</span></div>
+                    <div class="custom-option" data-value="Africa do Sul"><img src="https://flagcdn.com/w40/za.png" class="opt-flag"><span>Africa do Sul</span></div>
+                    <div class="custom-option" data-value="Coreia do Sul"><img src="https://flagcdn.com/w40/kr.png" class="opt-flag"><span>Coreia do Sul</span></div>
+                    <div class="custom-option" data-value="Rep. Tcheca"><img src="https://flagcdn.com/w40/cz.png" class="opt-flag"><span>Rep. Tcheca</span></div>
+                    <div class="custom-option" data-value="Canada"><img src="https://flagcdn.com/w40/ca.png" class="opt-flag"><span>Canada</span></div>
+                    <div class="custom-option" data-value="Bosnia"><img src="https://flagcdn.com/w40/ba.png" class="opt-flag"><span>Bosnia</span></div>
+                    <div class="custom-option" data-value="Catar"><img src="https://flagcdn.com/w40/qa.png" class="opt-flag"><span>Catar</span></div>
+                    <div class="custom-option" data-value="Suica"><img src="https://flagcdn.com/w40/ch.png" class="opt-flag"><span>Suica</span></div>
+                    <div class="custom-option" data-value="Brasil"><img src="https://flagcdn.com/w40/br.png" class="opt-flag"><span>Brasil</span></div>
+                    <div class="custom-option" data-value="Marrocos"><img src="https://flagcdn.com/w40/ma.png" class="opt-flag"><span>Marrocos</span></div>
+                    <div class="custom-option" data-value="Haiti"><img src="https://flagcdn.com/w40/ht.png" class="opt-flag"><span>Haiti</span></div>
+                    <div class="custom-option" data-value="Escocia"><img src="https://flagcdn.com/w40/gb-sct.png" class="opt-flag"><span>Escocia</span></div>
+                    <div class="custom-option" data-value="Estados Unidos"><img src="https://flagcdn.com/w40/us.png" class="opt-flag"><span>Estados Unidos</span></div>
+                    <div class="custom-option" data-value="Paraguai"><img src="https://flagcdn.com/w40/py.png" class="opt-flag"><span>Paraguai</span></div>
+                    <div class="custom-option" data-value="Australia"><img src="https://flagcdn.com/w40/au.png" class="opt-flag"><span>Australia</span></div>
+                    <div class="custom-option" data-value="Turquia"><img src="https://flagcdn.com/w40/tr.png" class="opt-flag"><span>Turquia</span></div>
+                    <div class="custom-option" data-value="Alemanha"><img src="https://flagcdn.com/w40/de.png" class="opt-flag"><span>Alemanha</span></div>
+                    <div class="custom-option" data-value="Curacao"><img src="https://flagcdn.com/w40/cw.png" class="opt-flag"><span>Curacao</span></div>
+                    <div class="custom-option" data-value="Costa do Marfim"><img src="https://flagcdn.com/w40/ci.png" class="opt-flag"><span>Costa do Marfim</span></div>
+                    <div class="custom-option" data-value="Equador"><img src="https://flagcdn.com/w40/ec.png" class="opt-flag"><span>Equador</span></div>
+                    <div class="custom-option" data-value="Holanda"><img src="https://flagcdn.com/w40/nl.png" class="opt-flag"><span>Holanda</span></div>
+                    <div class="custom-option" data-value="Japao"><img src="https://flagcdn.com/w40/jp.png" class="opt-flag"><span>Japao</span></div>
+                    <div class="custom-option" data-value="Suecia"><img src="https://flagcdn.com/w40/se.png" class="opt-flag"><span>Suecia</span></div>
+                    <div class="custom-option" data-value="Tunisia"><img src="https://flagcdn.com/w40/tn.png" class="opt-flag"><span>Tunisia</span></div>
+                    <div class="custom-option" data-value="Belgica"><img src="https://flagcdn.com/w40/be.png" class="opt-flag"><span>Belgica</span></div>
+                    <div class="custom-option" data-value="Egito"><img src="https://flagcdn.com/w40/eg.png" class="opt-flag"><span>Egito</span></div>
+                    <div class="custom-option" data-value="Ira"><img src="https://flagcdn.com/w40/ir.png" class="opt-flag"><span>Ira</span></div>
+                    <div class="custom-option" data-value="Nova Zelandia"><img src="https://flagcdn.com/w40/nz.png" class="opt-flag"><span>Nova Zelandia</span></div>
+                    <div class="custom-option" data-value="Espanha"><img src="https://flagcdn.com/w40/es.png" class="opt-flag"><span>Espanha</span></div>
+                    <div class="custom-option" data-value="Cabo Verde"><img src="https://flagcdn.com/w40/cv.png" class="opt-flag"><span>Cabo Verde</span></div>
+                    <div class="custom-option" data-value="Arabia Saudita"><img src="https://flagcdn.com/w40/sa.png" class="opt-flag"><span>Arabia Saudita</span></div>
+                    <div class="custom-option" data-value="Uruguai"><img src="https://flagcdn.com/w40/uy.png" class="opt-flag"><span>Uruguai</span></div>
+                    <div class="custom-option" data-value="Franca"><img src="https://flagcdn.com/w40/fr.png" class="opt-flag"><span>Franca</span></div>
+                    <div class="custom-option" data-value="Senegal"><img src="https://flagcdn.com/w40/sn.png" class="opt-flag"><span>Senegal</span></div>
+                    <div class="custom-option" data-value="Iraque"><img src="https://flagcdn.com/w40/iq.png" class="opt-flag"><span>Iraque</span></div>
+                    <div class="custom-option" data-value="Noruega"><img src="https://flagcdn.com/w40/no.png" class="opt-flag"><span>Noruega</span></div>
+                    <div class="custom-option" data-value="Argentina"><img src="https://flagcdn.com/w40/ar.png" class="opt-flag"><span>Argentina</span></div>
+                    <div class="custom-option" data-value="Algeria"><img src="https://flagcdn.com/w40/dz.png" class="opt-flag"><span>Algeria</span></div>
+                    <div class="custom-option" data-value="Austria"><img src="https://flagcdn.com/w40/at.png" class="opt-flag"><span>Austria</span></div>
+                    <div class="custom-option" data-value="Jordania"><img src="https://flagcdn.com/w40/jo.png" class="opt-flag"><span>Jordania</span></div>
+                    <div class="custom-option" data-value="Portugal"><img src="https://flagcdn.com/w40/pt.png" class="opt-flag"><span>Portugal</span></div>
+                    <div class="custom-option" data-value="Congo"><img src="https://flagcdn.com/w40/cd.png" class="opt-flag"><span>Congo</span></div>
+                    <div class="custom-option" data-value="Uzbequistao"><img src="https://flagcdn.com/w40/uz.png" class="opt-flag"><span>Uzbequistao</span></div>
+                    <div class="custom-option" data-value="Colombia"><img src="https://flagcdn.com/w40/co.png" class="opt-flag"><span>Colombia</span></div>
+                    <div class="custom-option" data-value="Inglaterra"><img src="https://flagcdn.com/w40/gb-eng.png" class="opt-flag"><span>Inglaterra</span></div>
+                    <div class="custom-option" data-value="Croatia"><img src="https://flagcdn.com/w40/hr.png" class="opt-flag"><span>Croatia</span></div>
+                    <div class="custom-option" data-value="Gana"><img src="https://flagcdn.com/w40/gh.png" class="opt-flag"><span>Gana</span></div>
+                    <div class="custom-option" data-value="Panama"><img src="https://flagcdn.com/w40/pa.png" class="opt-flag"><span>Panama</span></div>
+                    <div class="custom-option" data-value="Coca-Cola"><span class="opt-flag-empty"></span><span>Coca-Cola</span></div>
+                </div>
+            </div>
+            <select id="statusSelect">
+                <option value="">Todos Status</option>
+                <option value="0">❌ Faltando</option>
+                <option value="1">✓ Tenho</option>
+                <option value="2">🔁 Repetida</option>
+            </select>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total</div>
+                <div class="stat-value" id="totalCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Tenho</div>
+                <div class="stat-value" id="temCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Faltam</div>
+                <div class="stat-value" id="faltamCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Repetidas</div>
+                <div class="stat-value" id="repetidaCount">0</div>
+            </div>
+        </div>
+        
+        <div class="figurinhas-grid" id="figurinhasContainer"></div>
+    </div>
+
+    <script>
+        const figurinhas = [
+            {codigo: 'FWC00', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC01', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC02', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC03', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC04', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC05', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC06', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC07', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC08', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC09', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC10', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC11', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC12', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC13', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC14', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC15', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC16', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC17', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC18', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'FWC19', selecao: 'FIFA World Cup', jogador: '', status: 0},
+            {codigo: 'MEX1', selecao: 'Mexico', jogador: '', status: 0},
+            {codigo: 'MEX2', selecao: 'Mexico', jogador: 'Luis Malagón', status: 0},
+            {codigo: 'MEX3', selecao: 'Mexico', jogador: 'Johan Vásquez', status: 0},
+            {codigo: 'MEX4', selecao: 'Mexico', jogador: 'Jorge Sánchez', status: 0},
+            {codigo: 'MEX5', selecao: 'Mexico', jogador: 'César Montes', status: 0},
+            {codigo: 'MEX6', selecao: 'Mexico', jogador: 'Jesús Gallardo', status: 0},
+            {codigo: 'MEX7', selecao: 'Mexico', jogador: 'Israel Reyes', status: 0},
+            {codigo: 'MEX8', selecao: 'Mexico', jogador: 'Diego Lainez', status: 0},
+            {codigo: 'MEX9', selecao: 'Mexico', jogador: 'Carlos Rodríguez', status: 0},
+            {codigo: 'MEX10', selecao: 'Mexico', jogador: 'Edson Álvarez', status: 0},
+            {codigo: 'MEX11', selecao: 'Mexico', jogador: 'Orbelín Pineda', status: 0},
+            {codigo: 'MEX12', selecao: 'Mexico', jogador: 'Marcel Ruiz', status: 0},
+            {codigo: 'MEX13', selecao: 'Mexico', jogador: '', status: 0},
+            {codigo: 'MEX14', selecao: 'Mexico', jogador: 'Érick Sánchez', status: 0},
+            {codigo: 'MEX15', selecao: 'Mexico', jogador: 'Hirving Lozano', status: 0},
+            {codigo: 'MEX16', selecao: 'Mexico', jogador: 'Santiago Giménez', status: 0},
+            {codigo: 'MEX17', selecao: 'Mexico', jogador: 'Raúl Jiménez', status: 0},
+            {codigo: 'MEX18', selecao: 'Mexico', jogador: 'Alexis Vega', status: 0},
+            {codigo: 'MEX19', selecao: 'Mexico', jogador: 'Roberto Alvarado', status: 0},
+            {codigo: 'MEX20', selecao: 'Mexico', jogador: 'César Huerta', status: 0},
+            {codigo: 'RSA1', selecao: 'Africa do Sul', jogador: '', status: 0},
+            {codigo: 'RSA2', selecao: 'Africa do Sul', jogador: 'Ronwen Williams', status: 0},
+            {codigo: 'RSA3', selecao: 'Africa do Sul', jogador: 'Sipho Chaine', status: 0},
+            {codigo: 'RSA4', selecao: 'Africa do Sul', jogador: 'Aubrey Modiba', status: 0},
+            {codigo: 'RSA5', selecao: 'Africa do Sul', jogador: 'Samukele Kabini', status: 0},
+            {codigo: 'RSA6', selecao: 'Africa do Sul', jogador: 'Mbekezeli Mbokazi', status: 0},
+            {codigo: 'RSA7', selecao: 'Africa do Sul', jogador: 'Khulumani Ndamane', status: 0},
+            {codigo: 'RSA8', selecao: 'Africa do Sul', jogador: 'Siyabonga Ngezana', status: 0},
+            {codigo: 'RSA9', selecao: 'Africa do Sul', jogador: 'Khuliso Mudau', status: 0},
+            {codigo: 'RSA10', selecao: 'Africa do Sul', jogador: 'Nkosinathi Sibisi', status: 0},
+            {codigo: 'RSA11', selecao: 'Africa do Sul', jogador: 'Teboho Mokoena', status: 0},
+            {codigo: 'RSA12', selecao: 'Africa do Sul', jogador: 'Thalente Mbatha', status: 0},
+            {codigo: 'RSA13', selecao: 'Africa do Sul', jogador: '', status: 0},
+            {codigo: 'RSA14', selecao: 'Africa do Sul', jogador: 'Bathuisi Aubaas', status: 0},
+            {codigo: 'RSA15', selecao: 'Africa do Sul', jogador: 'Yaya Sithole', status: 0},
+            {codigo: 'RSA16', selecao: 'Africa do Sul', jogador: 'Sipho Mbule', status: 0},
+            {codigo: 'RSA17', selecao: 'Africa do Sul', jogador: 'Lyle Foster', status: 0},
+            {codigo: 'RSA18', selecao: 'Africa do Sul', jogador: 'Ioraam Rayners', status: 0},
+            {codigo: 'RSA19', selecao: 'Africa do Sul', jogador: 'Mohau Nkota', status: 0},
+            {codigo: 'RSA20', selecao: 'Africa do Sul', jogador: 'Oswin Appolis', status: 0},
+            {codigo: 'KOR1', selecao: 'Coreia do Sul', jogador: '', status: 0},
+            {codigo: 'KOR2', selecao: 'Coreia do Sul', jogador: 'Hyeon-woo Jo', status: 0},
+            {codigo: 'KOR3', selecao: 'Coreia do Sul', jogador: 'Seung-Gyu Kim', status: 0},
+            {codigo: 'KOR4', selecao: 'Coreia do Sul', jogador: 'Min-jae Kim', status: 0},
+            {codigo: 'KOR5', selecao: 'Coreia do Sul', jogador: 'Yu-min Cho', status: 0},
+            {codigo: 'KOR6', selecao: 'Coreia do Sul', jogador: 'Young-woo Seol', status: 0},
+            {codigo: 'KOR7', selecao: 'Coreia do Sul', jogador: 'Han-beom Lee', status: 0},
+            {codigo: 'KOR8', selecao: 'Coreia do Sul', jogador: 'Tae-seok Lee', status: 0},
+            {codigo: 'KOR9', selecao: 'Coreia do Sul', jogador: 'Myung-jae Lee', status: 0},
+            {codigo: 'KOR10', selecao: 'Coreia do Sul', jogador: 'Jae-sung Lee', status: 0},
+            {codigo: 'KOR11', selecao: 'Coreia do Sul', jogador: 'In-beom Hwang', status: 0},
+            {codigo: 'KOR12', selecao: 'Coreia do Sul', jogador: 'Kang-in Lee', status: 0},
+            {codigo: 'KOR13', selecao: 'Coreia do Sul', jogador: '', status: 0},
+            {codigo: 'KOR14', selecao: 'Coreia do Sul', jogador: 'Seung-ho Paik', status: 0},
+            {codigo: 'KOR15', selecao: 'Coreia do Sul', jogador: 'Jens Castrop', status: 0},
+            {codigo: 'KOR16', selecao: 'Coreia do Sul', jogador: 'Dong-gyeong Lee', status: 0},
+            {codigo: 'KOR17', selecao: 'Coreia do Sul', jogador: 'Gue-sung Cho', status: 0},
+            {codigo: 'KOR18', selecao: 'Coreia do Sul', jogador: 'Heung-min Son', status: 0},
+            {codigo: 'KOR19', selecao: 'Coreia do Sul', jogador: 'Hee-chan Hwang', status: 0},
+            {codigo: 'KOR20', selecao: 'Coreia do Sul', jogador: 'Hyeon-Gyu Oh', status: 0},
+            {codigo: 'CZE1', selecao: 'Rep. Tcheca', jogador: '', status: 0},
+            {codigo: 'CZE2', selecao: 'Rep. Tcheca', jogador: 'Matěj Kovář', status: 0},
+            {codigo: 'CZE3', selecao: 'Rep. Tcheca', jogador: 'Jindřich Staněk', status: 0},
+            {codigo: 'CZE4', selecao: 'Rep. Tcheca', jogador: 'Ladislav Krejčí', status: 0},
+            {codigo: 'CZE5', selecao: 'Rep. Tcheca', jogador: 'Vladimír Coufal', status: 0},
+            {codigo: 'CZE6', selecao: 'Rep. Tcheca', jogador: 'Jaroslav Zelený', status: 0},
+            {codigo: 'CZE7', selecao: 'Rep. Tcheca', jogador: 'Tomáš Holeš', status: 0},
+            {codigo: 'CZE8', selecao: 'Rep. Tcheca', jogador: 'David Zima', status: 0},
+            {codigo: 'CZE9', selecao: 'Rep. Tcheca', jogador: 'Michal Sadílek', status: 0},
+            {codigo: 'CZE10', selecao: 'Rep. Tcheca', jogador: 'Lukáš Provod', status: 0},
+            {codigo: 'CZE11', selecao: 'Rep. Tcheca', jogador: 'Lukáš Červ', status: 0},
+            {codigo: 'CZE12', selecao: 'Rep. Tcheca', jogador: 'Tomáš Souček', status: 0},
+            {codigo: 'CZE13', selecao: 'Rep. Tcheca', jogador: '', status: 0},
+            {codigo: 'CZE14', selecao: 'Rep. Tcheca', jogador: 'Pavel Šulc', status: 0},
+            {codigo: 'CZE15', selecao: 'Rep. Tcheca', jogador: 'Matěj Vydra', status: 0},
+            {codigo: 'CZE16', selecao: 'Rep. Tcheca', jogador: 'Vasil Kušej', status: 0},
+            {codigo: 'CZE17', selecao: 'Rep. Tcheca', jogador: 'Tomáš Chorý', status: 0},
+            {codigo: 'CZE18', selecao: 'Rep. Tcheca', jogador: 'Václav Černý', status: 0},
+            {codigo: 'CZE19', selecao: 'Rep. Tcheca', jogador: 'Adam Hložek', status: 0},
+            {codigo: 'CZE20', selecao: 'Rep. Tcheca', jogador: 'Patrik Schick', status: 0},
+            {codigo: 'CAN1', selecao: 'Canada', jogador: '', status: 0},
+            {codigo: 'CAN2', selecao: 'Canada', jogador: 'Dayne St. Clair', status: 0},
+            {codigo: 'CAN3', selecao: 'Canada', jogador: 'Alphonso Davies', status: 0},
+            {codigo: 'CAN4', selecao: 'Canada', jogador: 'Alistair Johnston', status: 0},
+            {codigo: 'CAN5', selecao: 'Canada', jogador: 'Samuel Adekugbe', status: 0},
+            {codigo: 'CAN6', selecao: 'Canada', jogador: 'Richie Laryea', status: 0},
+            {codigo: 'CAN7', selecao: 'Canada', jogador: 'Derek Cornelius', status: 0},
+            {codigo: 'CAN8', selecao: 'Canada', jogador: 'Moïse Bombito', status: 0},
+            {codigo: 'CAN9', selecao: 'Canada', jogador: 'Kamal Miller', status: 0},
+            {codigo: 'CAN10', selecao: 'Canada', jogador: 'Stephen Eustáquio', status: 0},
+            {codigo: 'CAN11', selecao: 'Canada', jogador: 'Ismaël Koné', status: 0},
+            {codigo: 'CAN12', selecao: 'Canada', jogador: 'Jonathan Osorio', status: 0},
+            {codigo: 'CAN13', selecao: 'Canada', jogador: '', status: 0},
+            {codigo: 'CAN14', selecao: 'Canada', jogador: 'Jacob Shaffelburg', status: 0},
+            {codigo: 'CAN15', selecao: 'Canada', jogador: 'Mathieu Choinière', status: 0},
+            {codigo: 'CAN16', selecao: 'Canada', jogador: 'Niko Sigur', status: 0},
+            {codigo: 'CAN17', selecao: 'Canada', jogador: 'Tajon Buchanan', status: 0},
+            {codigo: 'CAN18', selecao: 'Canada', jogador: 'Liam Millar', status: 0},
+            {codigo: 'CAN19', selecao: 'Canada', jogador: 'Cyle Larin', status: 0},
+            {codigo: 'CAN20', selecao: 'Canada', jogador: 'Jonathan David', status: 0},
+            {codigo: 'BIH1', selecao: 'Bosnia', jogador: '', status: 0},
+            {codigo: 'BIH2', selecao: 'Bosnia', jogador: 'Nikola Vasilj', status: 0},
+            {codigo: 'BIH3', selecao: 'Bosnia', jogador: 'Amar Dedić', status: 0},
+            {codigo: 'BIH4', selecao: 'Bosnia', jogador: 'Sead Kolašinac', status: 0},
+            {codigo: 'BIH5', selecao: 'Bosnia', jogador: 'Tarik Muharemović', status: 0},
+            {codigo: 'BIH6', selecao: 'Bosnia', jogador: 'Nihad Mujakić', status: 0},
+            {codigo: 'BIH7', selecao: 'Bosnia', jogador: 'Nikola Katić', status: 0},
+            {codigo: 'BIH8', selecao: 'Bosnia', jogador: 'Amir Hadžiahmetović', status: 0},
+            {codigo: 'BIH9', selecao: 'Bosnia', jogador: 'Benjamin Tahirović', status: 0},
+            {codigo: 'BIH10', selecao: 'Bosnia', jogador: 'Armin Gigović', status: 0},
+            {codigo: 'BIH11', selecao: 'Bosnia', jogador: 'Ivan Šunjić', status: 0},
+            {codigo: 'BIH12', selecao: 'Bosnia', jogador: 'Ivan Bašić', status: 0},
+            {codigo: 'BIH13', selecao: 'Bosnia', jogador: '', status: 0},
+            {codigo: 'BIH14', selecao: 'Bosnia', jogador: 'Dženis Burnić', status: 0},
+            {codigo: 'BIH15', selecao: 'Bosnia', jogador: 'Esmir Bajraktarević', status: 0},
+            {codigo: 'BIH16', selecao: 'Bosnia', jogador: 'Amar Memić', status: 0},
+            {codigo: 'BIH17', selecao: 'Bosnia', jogador: 'Ermedin Demirović', status: 0},
+            {codigo: 'BIH18', selecao: 'Bosnia', jogador: 'Edin Džeko', status: 0},
+            {codigo: 'BIH19', selecao: 'Bosnia', jogador: 'Samed Baždar', status: 0},
+            {codigo: 'BIH20', selecao: 'Bosnia', jogador: 'Haris Tabaković', status: 0},
+            {codigo: 'QAT1', selecao: 'Catar', jogador: '', status: 0},
+            {codigo: 'QAT2', selecao: 'Catar', jogador: 'Meshaal Barsham', status: 0},
+            {codigo: 'QAT3', selecao: 'Catar', jogador: 'Sultan Albrake', status: 0},
+            {codigo: 'QAT4', selecao: 'Catar', jogador: 'Lucas Mendes', status: 0},
+            {codigo: 'QAT5', selecao: 'Catar', jogador: 'Homam Ahmed', status: 0},
+            {codigo: 'QAT6', selecao: 'Catar', jogador: 'Boualem Khoukhi', status: 0},
+            {codigo: 'QAT7', selecao: 'Catar', jogador: 'Pedro Miguel', status: 0},
+            {codigo: 'QAT8', selecao: 'Catar', jogador: 'Tarek Salman', status: 0},
+            {codigo: 'QAT9', selecao: 'Catar', jogador: 'Mohamed Al-Mannai', status: 0},
+            {codigo: 'QAT10', selecao: 'Catar', jogador: 'Karim Boudiaf', status: 0},
+            {codigo: 'QAT11', selecao: 'Catar', jogador: 'Assim Madibo', status: 0},
+            {codigo: 'QAT12', selecao: 'Catar', jogador: 'Ahmed Fatehi', status: 0},
+            {codigo: 'QAT13', selecao: 'Catar', jogador: '', status: 0},
+            {codigo: 'QAT14', selecao: 'Catar', jogador: 'Mohammed Waad', status: 0},
+            {codigo: 'QAT15', selecao: 'Catar', jogador: 'Abdulaziz Hatem', status: 0},
+            {codigo: 'QAT16', selecao: 'Catar', jogador: 'Hassan Al-Haydos', status: 0},
+            {codigo: 'QAT17', selecao: 'Catar', jogador: 'Edmilson Junior', status: 0},
+            {codigo: 'QAT18', selecao: 'Catar', jogador: 'Akram Hassan Afif', status: 0},
+            {codigo: 'QAT19', selecao: 'Catar', jogador: 'Ahmed Al Ganehi', status: 0},
+            {codigo: 'QAT20', selecao: 'Catar', jogador: 'Almoez Ali', status: 0},
+            {codigo: 'SUI1', selecao: 'Suica', jogador: '', status: 0},
+            {codigo: 'SUI2', selecao: 'Suica', jogador: 'Gregor Kobel', status: 0},
+            {codigo: 'SUI3', selecao: 'Suica', jogador: 'Yvon Mvogo', status: 0},
+            {codigo: 'SUI4', selecao: 'Suica', jogador: 'Manuel Akanji', status: 0},
+            {codigo: 'SUI5', selecao: 'Suica', jogador: 'Ricardo Rodriguez', status: 0},
+            {codigo: 'SUI6', selecao: 'Suica', jogador: 'Nico Elvedi', status: 0},
+            {codigo: 'SUI7', selecao: 'Suica', jogador: 'Aurèle Amenda', status: 0},
+            {codigo: 'SUI8', selecao: 'Suica', jogador: 'Silvan Widmer', status: 0},
+            {codigo: 'SUI9', selecao: 'Suica', jogador: 'Granit Xhaka', status: 0},
+            {codigo: 'SUI10', selecao: 'Suica', jogador: 'Denis Zakaria', status: 0},
+            {codigo: 'SUI11', selecao: 'Suica', jogador: 'Remo Freuler', status: 0},
+            {codigo: 'SUI12', selecao: 'Suica', jogador: 'Fabian Rieder', status: 0},
+            {codigo: 'SUI13', selecao: 'Suica', jogador: '', status: 0},
+            {codigo: 'SUI14', selecao: 'Suica', jogador: 'Ardon Jashari', status: 0},
+            {codigo: 'SUI15', selecao: 'Suica', jogador: 'Johan Manzambi', status: 0},
+            {codigo: 'SUI16', selecao: 'Suica', jogador: 'Michel Aebischer', status: 0},
+            {codigo: 'SUI17', selecao: 'Suica', jogador: 'Breel Embolo', status: 0},
+            {codigo: 'SUI18', selecao: 'Suica', jogador: 'Ruben Vargas', status: 0},
+            {codigo: 'SUI19', selecao: 'Suica', jogador: 'Dan Ndoye', status: 0},
+            {codigo: 'SUI20', selecao: 'Suica', jogador: 'Zeki Amdouni', status: 0},
+            {codigo: 'BRA1', selecao: 'Brasil', jogador: '', status: 0},
+            {codigo: 'BRA2', selecao: 'Brasil', jogador: 'Alisson', status: 0},
+            {codigo: 'BRA3', selecao: 'Brasil', jogador: 'Bento', status: 0},
+            {codigo: 'BRA4', selecao: 'Brasil', jogador: 'Marquinhos', status: 0},
+            {codigo: 'BRA5', selecao: 'Brasil', jogador: 'Éder Militão', status: 0},
+            {codigo: 'BRA6', selecao: 'Brasil', jogador: 'Gabriel Magalhães', status: 0},
+            {codigo: 'BRA7', selecao: 'Brasil', jogador: 'Danilo', status: 0},
+            {codigo: 'BRA8', selecao: 'Brasil', jogador: 'Wesley', status: 0},
+            {codigo: 'BRA9', selecao: 'Brasil', jogador: 'Lucas Paquetá', status: 0},
+            {codigo: 'BRA10', selecao: 'Brasil', jogador: 'Casemiro', status: 0},
+            {codigo: 'BRA11', selecao: 'Brasil', jogador: 'Bruno Guimarães', status: 0},
+            {codigo: 'BRA12', selecao: 'Brasil', jogador: 'Luiz Henrique', status: 0},
+            {codigo: 'BRA13', selecao: 'Brasil', jogador: '', status: 0},
+            {codigo: 'BRA14', selecao: 'Brasil', jogador: 'Vinícius Júnior', status: 0},
+            {codigo: 'BRA15', selecao: 'Brasil', jogador: 'Rodrygo', status: 0},
+            {codigo: 'BRA16', selecao: 'Brasil', jogador: 'João Pedro', status: 0},
+            {codigo: 'BRA17', selecao: 'Brasil', jogador: 'Matheus Cunha', status: 0},
+            {codigo: 'BRA18', selecao: 'Brasil', jogador: 'Gabriel Martinelli', status: 0},
+            {codigo: 'BRA19', selecao: 'Brasil', jogador: 'Raphinha', status: 0},
+            {codigo: 'BRA20', selecao: 'Brasil', jogador: 'Estêvão', status: 0},
+            {codigo: 'MAR1', selecao: 'Marrocos', jogador: '', status: 0},
+            {codigo: 'MAR2', selecao: 'Marrocos', jogador: 'Yassine Bounou', status: 0},
+            {codigo: 'MAR3', selecao: 'Marrocos', jogador: 'Munir El Kajoui', status: 0},
+            {codigo: 'MAR4', selecao: 'Marrocos', jogador: 'Achraf Hakimi', status: 0},
+            {codigo: 'MAR5', selecao: 'Marrocos', jogador: 'Noussair Mazraoui', status: 0},
+            {codigo: 'MAR6', selecao: 'Marrocos', jogador: 'Nayef Aguerd', status: 0},
+            {codigo: 'MAR7', selecao: 'Marrocos', jogador: 'Romain Saïss', status: 0},
+            {codigo: 'MAR8', selecao: 'Marrocos', jogador: 'Jawad El Yamiq', status: 0},
+            {codigo: 'MAR9', selecao: 'Marrocos', jogador: 'Adam Masina', status: 0},
+            {codigo: 'MAR10', selecao: 'Marrocos', jogador: 'Sofyan Amrabat', status: 0},
+            {codigo: 'MAR11', selecao: 'Marrocos', jogador: 'Azzedine Ounahi', status: 0},
+            {codigo: 'MAR12', selecao: 'Marrocos', jogador: 'Eliesse Ben Seghir', status: 0},
+            {codigo: 'MAR13', selecao: 'Marrocos', jogador: '', status: 0},
+            {codigo: 'MAR14', selecao: 'Marrocos', jogador: 'Bilal El Khannouss', status: 0},
+            {codigo: 'MAR15', selecao: 'Marrocos', jogador: 'Ismael Saibari', status: 0},
+            {codigo: 'MAR16', selecao: 'Marrocos', jogador: 'Youssef En-Nesyri', status: 0},
+            {codigo: 'MAR17', selecao: 'Marrocos', jogador: 'Abde Ezzalzouli', status: 0},
+            {codigo: 'MAR18', selecao: 'Marrocos', jogador: 'Soufiane Rahimi', status: 0},
+            {codigo: 'MAR19', selecao: 'Marrocos', jogador: 'Brahim Díaz', status: 0},
+            {codigo: 'MAR20', selecao: 'Marrocos', jogador: 'Ayoub El Kaabi', status: 0},
+            {codigo: 'HAI1', selecao: 'Haiti', jogador: '', status: 0},
+            {codigo: 'HAI2', selecao: 'Haiti', jogador: 'Johny Placide', status: 0},
+            {codigo: 'HAI3', selecao: 'Haiti', jogador: 'Carlens Arcus', status: 0},
+            {codigo: 'HAI4', selecao: 'Haiti', jogador: 'Martin Expérience', status: 0},
+            {codigo: 'HAI5', selecao: 'Haiti', jogador: 'Jean-Kevin Duverne', status: 0},
+            {codigo: 'HAI6', selecao: 'Haiti', jogador: 'Ricardo Adé', status: 0},
+            {codigo: 'HAI7', selecao: 'Haiti', jogador: 'Duke Lacroix', status: 0},
+            {codigo: 'HAI8', selecao: 'Haiti', jogador: 'Garven Metusala', status: 0},
+            {codigo: 'HAI9', selecao: 'Haiti', jogador: 'Hannes Delcroix', status: 0},
+            {codigo: 'HAI10', selecao: 'Haiti', jogador: 'Leverton Pierre', status: 0},
+            {codigo: 'HAI11', selecao: 'Haiti', jogador: 'Danley Jean Jacques', status: 0},
+            {codigo: 'HAI12', selecao: 'Haiti', jogador: 'Jean-Ricner Bellegarde', status: 0},
+            {codigo: 'HAI13', selecao: 'Haiti', jogador: '', status: 0},
+            {codigo: 'HAI14', selecao: 'Haiti', jogador: 'Christopher Attys', status: 0},
+            {codigo: 'HAI15', selecao: 'Haiti', jogador: 'Derrick Etienne Jr.', status: 0},
+            {codigo: 'HAI16', selecao: 'Haiti', jogador: 'Josué Casimir', status: 0},
+            {codigo: 'HAI17', selecao: 'Haiti', jogador: 'Ruben Providence', status: 0},
+            {codigo: 'HAI18', selecao: 'Haiti', jogador: 'Duckens Nazon', status: 0},
+            {codigo: 'HAI19', selecao: 'Haiti', jogador: 'Louicius Deedson', status: 0},
+            {codigo: 'HAI20', selecao: 'Haiti', jogador: 'Frantzdy Pierrot', status: 0},
+            {codigo: 'SCO1', selecao: 'Escocia', jogador: '', status: 0},
+            {codigo: 'SCO2', selecao: 'Escocia', jogador: 'Angus Gunn', status: 0},
+            {codigo: 'SCO3', selecao: 'Escocia', jogador: 'Jack Hendry', status: 0},
+            {codigo: 'SCO4', selecao: 'Escocia', jogador: 'Kieran Tierney', status: 0},
+            {codigo: 'SCO5', selecao: 'Escocia', jogador: 'Aaron Hickey', status: 0},
+            {codigo: 'SCO6', selecao: 'Escocia', jogador: 'Andrew Robertson', status: 0},
+            {codigo: 'SCO7', selecao: 'Escocia', jogador: 'Scott McKenna', status: 0},
+            {codigo: 'SCO8', selecao: 'Escocia', jogador: 'John Souttar', status: 0},
+            {codigo: 'SCO9', selecao: 'Escocia', jogador: 'Anthony Ralston', status: 0},
+            {codigo: 'SCO10', selecao: 'Escocia', jogador: 'Grant Hanley', status: 0},
+            {codigo: 'SCO11', selecao: 'Escocia', jogador: 'Scott McTominay', status: 0},
+            {codigo: 'SCO12', selecao: 'Escocia', jogador: 'Billy Gilmour', status: 0},
+            {codigo: 'SCO13', selecao: 'Escocia', jogador: '', status: 0},
+            {codigo: 'SCO14', selecao: 'Escocia', jogador: 'Lewis Ferguson', status: 0},
+            {codigo: 'SCO15', selecao: 'Escocia', jogador: 'Ryan Christie', status: 0},
+            {codigo: 'SCO16', selecao: 'Escocia', jogador: 'Kenny McLean', status: 0},
+            {codigo: 'SCO17', selecao: 'Escocia', jogador: 'John McGinn', status: 0},
+            {codigo: 'SCO18', selecao: 'Escocia', jogador: 'Lyndon Dykes', status: 0},
+            {codigo: 'SCO19', selecao: 'Escocia', jogador: 'Che Adams', status: 0},
+            {codigo: 'SCO20', selecao: 'Escocia', jogador: 'Ben Gannon-Doak', status: 0},
+            {codigo: 'USA1', selecao: 'Estados Unidos', jogador: '', status: 0},
+            {codigo: 'USA2', selecao: 'Estados Unidos', jogador: 'Math Freese', status: 0},
+            {codigo: 'USA3', selecao: 'Estados Unidos', jogador: 'Chris Richards', status: 0},
+            {codigo: 'USA4', selecao: 'Estados Unidos', jogador: 'Tim Ream', status: 0},
+            {codigo: 'USA5', selecao: 'Estados Unidos', jogador: 'Mark McKenzie', status: 0},
+            {codigo: 'USA6', selecao: 'Estados Unidos', jogador: 'Alex Freeman', status: 0},
+            {codigo: 'USA7', selecao: 'Estados Unidos', jogador: 'Antonee Robinson', status: 0},
+            {codigo: 'USA8', selecao: 'Estados Unidos', jogador: 'Tyler Adams', status: 0},
+            {codigo: 'USA9', selecao: 'Estados Unidos', jogador: 'Tanner Tessmann', status: 0},
+            {codigo: 'USA10', selecao: 'Estados Unidos', jogador: 'Weston McKenny', status: 0},
+            {codigo: 'USA11', selecao: 'Estados Unidos', jogador: 'Christian Roldan', status: 0},
+            {codigo: 'USA12', selecao: 'Estados Unidos', jogador: 'Timothy Weah', status: 0},
+            {codigo: 'USA13', selecao: 'Estados Unidos', jogador: '', status: 0},
+            {codigo: 'USA14', selecao: 'Estados Unidos', jogador: 'Diego Luna', status: 0},
+            {codigo: 'USA15', selecao: 'Estados Unidos', jogador: 'Malim Tillman', status: 0},
+            {codigo: 'USA16', selecao: 'Estados Unidos', jogador: 'Christian Pulisic', status: 0},
+            {codigo: 'USA17', selecao: 'Estados Unidos', jogador: 'Brenden Aaronson', status: 0},
+            {codigo: 'USA18', selecao: 'Estados Unidos', jogador: 'Ricardo Pepi', status: 0},
+            {codigo: 'USA19', selecao: 'Estados Unidos', jogador: 'Haji Wright', status: 0},
+            {codigo: 'USA20', selecao: 'Estados Unidos', jogador: 'Folarin Balogun', status: 0},
+            {codigo: 'PAR1', selecao: 'Paraguai', jogador: '', status: 0},
+            {codigo: 'PAR2', selecao: 'Paraguai', jogador: 'Roberto Fernández', status: 0},
+            {codigo: 'PAR3', selecao: 'Paraguai', jogador: 'Orlando Gill', status: 0},
+            {codigo: 'PAR4', selecao: 'Paraguai', jogador: 'Gustavo Gómez', status: 0},
+            {codigo: 'PAR5', selecao: 'Paraguai', jogador: 'Fabián Balbuena', status: 0},
+            {codigo: 'PAR6', selecao: 'Paraguai', jogador: 'Juan José Cáceres', status: 0},
+            {codigo: 'PAR7', selecao: 'Paraguai', jogador: 'Omar Alderete', status: 0},
+            {codigo: 'PAR8', selecao: 'Paraguai', jogador: 'Junior Alonso', status: 0},
+            {codigo: 'PAR9', selecao: 'Paraguai', jogador: 'Mathías Villasanti', status: 0},
+            {codigo: 'PAR10', selecao: 'Paraguai', jogador: 'Diego Gómez', status: 0},
+            {codigo: 'PAR11', selecao: 'Paraguai', jogador: 'Damián Bobadilla', status: 0},
+            {codigo: 'PAR12', selecao: 'Paraguai', jogador: 'Andrés Cubas', status: 0},
+            {codigo: 'PAR13', selecao: 'Paraguai', jogador: '', status: 0},
+            {codigo: 'PAR14', selecao: 'Paraguai', jogador: 'Matías Galarza Fonda', status: 0},
+            {codigo: 'PAR15', selecao: 'Paraguai', jogador: 'Julio Enciso', status: 0},
+            {codigo: 'PAR16', selecao: 'Paraguai', jogador: 'Romero Gamarra', status: 0},
+            {codigo: 'PAR17', selecao: 'Paraguai', jogador: 'Miguel Almirón', status: 0},
+            {codigo: 'PAR18', selecao: 'Paraguai', jogador: 'Ramón Sosa', status: 0},
+            {codigo: 'PAR19', selecao: 'Paraguai', jogador: 'Ángel Romero', status: 0},
+            {codigo: 'PAR20', selecao: 'Paraguai', jogador: 'Antonio Sanabria', status: 0},
+            {codigo: 'AUS1', selecao: 'Australia', jogador: '', status: 0},
+            {codigo: 'AUS2', selecao: 'Australia', jogador: 'Mathew Ryan', status: 0},
+            {codigo: 'AUS3', selecao: 'Australia', jogador: 'Joe Gauci', status: 0},
+            {codigo: 'AUS4', selecao: 'Australia', jogador: 'Harry Souttar', status: 0},
+            {codigo: 'AUS5', selecao: 'Australia', jogador: 'Alessandro Circati', status: 0},
+            {codigo: 'AUS6', selecao: 'Australia', jogador: 'Jordan Bos', status: 0},
+            {codigo: 'AUS7', selecao: 'Australia', jogador: 'Aziz Behich', status: 0},
+            {codigo: 'AUS8', selecao: 'Australia', jogador: 'Cameron Burgess', status: 0},
+            {codigo: 'AUS9', selecao: 'Australia', jogador: 'Lewis Miller', status: 0},
+            {codigo: 'AUS10', selecao: 'Australia', jogador: 'Milos Degenek', status: 0},
+            {codigo: 'AUS11', selecao: 'Australia', jogador: 'Jackson Irvine', status: 0},
+            {codigo: 'AUS12', selecao: 'Australia', jogador: 'Riley McGree', status: 0},
+            {codigo: 'AUS13', selecao: 'Australia', jogador: '', status: 0},
+            {codigo: 'AUS14', selecao: 'Australia', jogador: 'Aiden O’Neill', status: 0},
+            {codigo: 'AUS15', selecao: 'Australia', jogador: 'Connor Metcalfe', status: 0},
+            {codigo: 'AUS16', selecao: 'Australia', jogador: 'Patrick Yazbek', status: 0},
+            {codigo: 'AUS17', selecao: 'Australia', jogador: 'Craig Goodwin', status: 0},
+            {codigo: 'AUS18', selecao: 'Australia', jogador: 'Kusini Yengi', status: 0},
+            {codigo: 'AUS19', selecao: 'Australia', jogador: 'Nestory Irankunda', status: 0},
+            {codigo: 'AUS20', selecao: 'Australia', jogador: 'Mohamed Touré', status: 0},
+            {codigo: 'TUR1', selecao: 'Turquia', jogador: '', status: 0},
+            {codigo: 'TUR2', selecao: 'Turquia', jogador: 'Ugurcan Cakir', status: 0},
+            {codigo: 'TUR3', selecao: 'Turquia', jogador: 'Mert Muldur', status: 0},
+            {codigo: 'TUR4', selecao: 'Turquia', jogador: 'Zeki Celik', status: 0},
+            {codigo: 'TUR5', selecao: 'Turquia', jogador: 'Abdulkerim Bardakci', status: 0},
+            {codigo: 'TUR6', selecao: 'Turquia', jogador: 'Caglar Soyunku', status: 0},
+            {codigo: 'TUR7', selecao: 'Turquia', jogador: 'Merih Demiral', status: 0},
+            {codigo: 'TUR8', selecao: 'Turquia', jogador: 'Ferdi Kadioglu', status: 0},
+            {codigo: 'TUR9', selecao: 'Turquia', jogador: 'Kaan Ayhan', status: 0},
+            {codigo: 'TUR10', selecao: 'Turquia', jogador: 'Ismail Yuksek', status: 0},
+            {codigo: 'TUR11', selecao: 'Turquia', jogador: 'Hakan Calhanoglu', status: 0},
+            {codigo: 'TUR12', selecao: 'Turquia', jogador: 'Orkun Kokcu', status: 0},
+            {codigo: 'TUR13', selecao: 'Turquia', jogador: '', status: 0},
+            {codigo: 'TUR14', selecao: 'Turquia', jogador: 'Arda Güler', status: 0},
+            {codigo: 'TUR15', selecao: 'Turquia', jogador: 'Irfan Can Kahvecu', status: 0},
+            {codigo: 'TUR16', selecao: 'Turquia', jogador: 'Yunus Akgun', status: 0},
+            {codigo: 'TUR17', selecao: 'Turquia', jogador: 'Can Uzun', status: 0},
+            {codigo: 'TUR18', selecao: 'Turquia', jogador: 'Baris Alper Yilmaz', status: 0},
+            {codigo: 'TUR19', selecao: 'Turquia', jogador: 'Kerem Akturkoglu', status: 0},
+            {codigo: 'TUR20', selecao: 'Turquia', jogador: 'Kenan Yildiz', status: 0},
+            {codigo: 'GER1', selecao: 'Alemanha', jogador: '', status: 0},
+            {codigo: 'GER2', selecao: 'Alemanha', jogador: 'Marc-André ter Stegen', status: 0},
+            {codigo: 'GER3', selecao: 'Alemanha', jogador: 'Jonathan Tah', status: 0},
+            {codigo: 'GER4', selecao: 'Alemanha', jogador: 'David Raum', status: 0},
+            {codigo: 'GER5', selecao: 'Alemanha', jogador: 'Nico Schlotterbeck', status: 0},
+            {codigo: 'GER6', selecao: 'Alemanha', jogador: 'Antonio Rüdiger', status: 0},
+            {codigo: 'GER7', selecao: 'Alemanha', jogador: 'Waldemar Anton', status: 0},
+            {codigo: 'GER8', selecao: 'Alemanha', jogador: 'Ridle Baku', status: 0},
+            {codigo: 'GER9', selecao: 'Alemanha', jogador: 'Maximilian Mittelstädt', status: 0},
+            {codigo: 'GER10', selecao: 'Alemanha', jogador: 'Joshua Kimmich', status: 0},
+            {codigo: 'GER11', selecao: 'Alemanha', jogador: 'Florian Wirtz', status: 0},
+            {codigo: 'GER12', selecao: 'Alemanha', jogador: 'Felix Nmecha', status: 0},
+            {codigo: 'GER13', selecao: 'Alemanha', jogador: '', status: 0},
+            {codigo: 'GER14', selecao: 'Alemanha', jogador: 'Leon Goretzka', status: 0},
+            {codigo: 'GER15', selecao: 'Alemanha', jogador: 'Jamal Musiala', status: 0},
+            {codigo: 'GER16', selecao: 'Alemanha', jogador: 'Serge Gnabry', status: 0},
+            {codigo: 'GER17', selecao: 'Alemanha', jogador: 'Kai Havertz', status: 0},
+            {codigo: 'GER18', selecao: 'Alemanha', jogador: 'Leroy Sané', status: 0},
+            {codigo: 'GER19', selecao: 'Alemanha', jogador: 'Karim Adeyemi', status: 0},
+            {codigo: 'GER20', selecao: 'Alemanha', jogador: 'Nick Woltemade', status: 0},
+            {codigo: 'CUW1', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW2', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW3', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW4', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW5', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW6', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW7', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW8', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW9', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW10', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW11', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW12', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW13', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW14', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW15', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW16', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW17', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW18', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW19', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CUW20', selecao: 'Curacao', jogador: '', status: 0},
+            {codigo: 'CIV1', selecao: 'Costa do Marfim', jogador: '', status: 0},
+            {codigo: 'CIV2', selecao: 'Costa do Marfim', jogador: 'Yahia Fofana', status: 0},
+            {codigo: 'CIV3', selecao: 'Costa do Marfim', jogador: 'Ghislain Konan', status: 0},
+            {codigo: 'CIV4', selecao: 'Costa do Marfim', jogador: 'Wilfried Singo', status: 0},
+            {codigo: 'CIV5', selecao: 'Costa do Marfim', jogador: 'Odilon Kossounou', status: 0},
+            {codigo: 'CIV6', selecao: 'Costa do Marfim', jogador: 'Evan Ndicka', status: 0},
+            {codigo: 'CIV7', selecao: 'Costa do Marfim', jogador: 'Willy Boly', status: 0},
+            {codigo: 'CIV8', selecao: 'Costa do Marfim', jogador: 'Emmanuel Agbadou', status: 0},
+            {codigo: 'CIV9', selecao: 'Costa do Marfim', jogador: 'Ousmane Diomande', status: 0},
+            {codigo: 'CIV10', selecao: 'Costa do Marfim', jogador: 'Franck Kessié', status: 0},
+            {codigo: 'CIV11', selecao: 'Costa do Marfim', jogador: 'Seko Fofana', status: 0},
+            {codigo: 'CIV12', selecao: 'Costa do Marfim', jogador: 'Ibrahim Sangaré', status: 0},
+            {codigo: 'CIV13', selecao: 'Costa do Marfim', jogador: '', status: 0},
+            {codigo: 'CIV14', selecao: 'Costa do Marfim', jogador: 'Jean-Philippe Gbamin', status: 0},
+            {codigo: 'CIV15', selecao: 'Costa do Marfim', jogador: 'Amad Diallo', status: 0},
+            {codigo: 'CIV16', selecao: 'Costa do Marfim', jogador: 'Sébastien Haller', status: 0},
+            {codigo: 'CIV17', selecao: 'Costa do Marfim', jogador: 'Simon Adingra', status: 0},
+            {codigo: 'CIV18', selecao: 'Costa do Marfim', jogador: 'Yan Diomande', status: 0},
+            {codigo: 'CIV19', selecao: 'Costa do Marfim', jogador: 'Evann Guessand', status: 0},
+            {codigo: 'CIV20', selecao: 'Costa do Marfim', jogador: 'Oumar Diakité', status: 0},
+            {codigo: 'ECU1', selecao: 'Equador', jogador: '', status: 0},
+            {codigo: 'ECU2', selecao: 'Equador', jogador: 'Hernán Galíndez', status: 0},
+            {codigo: 'ECU3', selecao: 'Equador', jogador: 'Gonzalo Valle', status: 0},
+            {codigo: 'ECU4', selecao: 'Equador', jogador: 'Piero Hincapié', status: 0},
+            {codigo: 'ECU5', selecao: 'Equador', jogador: 'Pervis Estupiñán', status: 0},
+            {codigo: 'ECU6', selecao: 'Equador', jogador: 'Willian Pacho', status: 0},
+            {codigo: 'ECU7', selecao: 'Equador', jogador: 'Ángelo Preciado', status: 0},
+            {codigo: 'ECU8', selecao: 'Equador', jogador: 'Joel Ordóñez', status: 0},
+            {codigo: 'ECU9', selecao: 'Equador', jogador: 'Moisés Caicedo', status: 0},
+            {codigo: 'ECU10', selecao: 'Equador', jogador: 'Alan Franco', status: 0},
+            {codigo: 'ECU11', selecao: 'Equador', jogador: 'Kendry Páez', status: 0},
+            {codigo: 'ECU12', selecao: 'Equador', jogador: 'Pedro Vite', status: 0},
+            {codigo: 'ECU13', selecao: 'Equador', jogador: '', status: 0},
+            {codigo: 'ECU14', selecao: 'Equador', jogador: 'John Veboah', status: 0},
+            {codigo: 'ECU15', selecao: 'Equador', jogador: 'Leonardo Campana', status: 0},
+            {codigo: 'ECU16', selecao: 'Equador', jogador: 'Gonzalo Plata', status: 0},
+            {codigo: 'ECU17', selecao: 'Equador', jogador: 'Nilson Angulo', status: 0},
+            {codigo: 'ECU18', selecao: 'Equador', jogador: 'Alan Minda', status: 0},
+            {codigo: 'ECU19', selecao: 'Equador', jogador: 'Kevin Rodríguez', status: 0},
+            {codigo: 'ECU20', selecao: 'Equador', jogador: 'Enner Valencia', status: 0},
+            {codigo: 'NED1', selecao: 'Holanda', jogador: '', status: 0},
+            {codigo: 'NED2', selecao: 'Holanda', jogador: 'Bart Verbruggen', status: 0},
+            {codigo: 'NED3', selecao: 'Holanda', jogador: 'Virgil van Dijk', status: 0},
+            {codigo: 'NED4', selecao: 'Holanda', jogador: 'Micky van de Ven', status: 0},
+            {codigo: 'NED5', selecao: 'Holanda', jogador: 'Jurriën Timber', status: 0},
+            {codigo: 'NED6', selecao: 'Holanda', jogador: 'Denzel Dumfries', status: 0},
+            {codigo: 'NED7', selecao: 'Holanda', jogador: 'Nathan Aké', status: 0},
+            {codigo: 'NED8', selecao: 'Holanda', jogador: 'Jeremie Frimpong', status: 0},
+            {codigo: 'NED9', selecao: 'Holanda', jogador: 'Jan Paul van Hecke', status: 0},
+            {codigo: 'NED10', selecao: 'Holanda', jogador: 'Tijjani Reijnders', status: 0},
+            {codigo: 'NED11', selecao: 'Holanda', jogador: 'Ryan Gravenberch', status: 0},
+            {codigo: 'NED12', selecao: 'Holanda', jogador: 'Teun Koopmeiners', status: 0},
+            {codigo: 'NED13', selecao: 'Holanda', jogador: '', status: 0},
+            {codigo: 'NED14', selecao: 'Holanda', jogador: 'Frenkie de Jong', status: 0},
+            {codigo: 'NED15', selecao: 'Holanda', jogador: 'Xavi Simons', status: 0},
+            {codigo: 'NED16', selecao: 'Holanda', jogador: 'Justin Kluivert', status: 0},
+            {codigo: 'NED17', selecao: 'Holanda', jogador: 'Memphis Depay', status: 0},
+            {codigo: 'NED18', selecao: 'Holanda', jogador: 'Donyell Malen', status: 0},
+            {codigo: 'NED19', selecao: 'Holanda', jogador: 'Wout Weghorst', status: 0},
+            {codigo: 'NED20', selecao: 'Holanda', jogador: 'Cody Gakpo', status: 0},
+            {codigo: 'JPN1', selecao: 'Japao', jogador: '', status: 0},
+            {codigo: 'JPN2', selecao: 'Japao', jogador: 'Zion Suzuki', status: 0},
+            {codigo: 'JPN3', selecao: 'Japao', jogador: 'Henry Heroki Mochizuki', status: 0},
+            {codigo: 'JPN4', selecao: 'Japao', jogador: 'Ayumu Seko', status: 0},
+            {codigo: 'JPN5', selecao: 'Japao', jogador: 'Junnosuke Suzuki', status: 0},
+            {codigo: 'JPN6', selecao: 'Japao', jogador: 'Shogo Taniguchi', status: 0},
+            {codigo: 'JPN7', selecao: 'Japao', jogador: 'Tsuyoshi Watanabe', status: 0},
+            {codigo: 'JPN8', selecao: 'Japao', jogador: 'Kaishu Sano', status: 0},
+            {codigo: 'JPN9', selecao: 'Japao', jogador: 'Yuki Soma', status: 0},
+            {codigo: 'JPN10', selecao: 'Japao', jogador: 'Ao Tanaka', status: 0},
+            {codigo: 'JPN11', selecao: 'Japao', jogador: 'Daichi Kamada', status: 0},
+            {codigo: 'JPN12', selecao: 'Japao', jogador: 'Takefusa Kubo', status: 0},
+            {codigo: 'JPN13', selecao: 'Japao', jogador: '', status: 0},
+            {codigo: 'JPN14', selecao: 'Japao', jogador: 'Ritsu Doan', status: 0},
+            {codigo: 'JPN15', selecao: 'Japao', jogador: 'Keito Nakamura', status: 0},
+            {codigo: 'JPN16', selecao: 'Japao', jogador: 'Takumi Minamino', status: 0},
+            {codigo: 'JPN17', selecao: 'Japao', jogador: 'Shuto Machino', status: 0},
+            {codigo: 'JPN18', selecao: 'Japao', jogador: 'Junya Ito', status: 0},
+            {codigo: 'JPN19', selecao: 'Japao', jogador: 'Koki Ogawa', status: 0},
+            {codigo: 'JPN20', selecao: 'Japao', jogador: 'Ayase Ueda', status: 0},
+            {codigo: 'SWE1', selecao: 'Suecia', jogador: '', status: 0},
+            {codigo: 'SWE2', selecao: 'Suecia', jogador: 'Victor Johansson', status: 0},
+            {codigo: 'SWE3', selecao: 'Suecia', jogador: 'Isak Hien', status: 0},
+            {codigo: 'SWE4', selecao: 'Suecia', jogador: 'Gabriel Gudmundsson', status: 0},
+            {codigo: 'SWE5', selecao: 'Suecia', jogador: 'Emil Holm', status: 0},
+            {codigo: 'SWE6', selecao: 'Suecia', jogador: 'Victor Nilsson Lindelöf', status: 0},
+            {codigo: 'SWE7', selecao: 'Suecia', jogador: 'Gustaf Lagerbielke', status: 0},
+            {codigo: 'SWE8', selecao: 'Suecia', jogador: 'Lucas Bergvall', status: 0},
+            {codigo: 'SWE9', selecao: 'Suecia', jogador: 'Hugo Larsson', status: 0},
+            {codigo: 'SWE10', selecao: 'Suecia', jogador: 'Jesper Karlström', status: 0},
+            {codigo: 'SWE11', selecao: 'Suecia', jogador: 'Yasin Ayari', status: 0},
+            {codigo: 'SWE12', selecao: 'Suecia', jogador: 'Mattias Svanberg', status: 0},
+            {codigo: 'SWE13', selecao: 'Suecia', jogador: '', status: 0},
+            {codigo: 'SWE14', selecao: 'Suecia', jogador: 'Daniel Svensson', status: 0},
+            {codigo: 'SWE15', selecao: 'Suecia', jogador: 'Ken Sema', status: 0},
+            {codigo: 'SWE16', selecao: 'Suecia', jogador: 'Roony Bardghji', status: 0},
+            {codigo: 'SWE17', selecao: 'Suecia', jogador: 'Dejan Kulusevski', status: 0},
+            {codigo: 'SWE18', selecao: 'Suecia', jogador: 'Anthony Elanga', status: 0},
+            {codigo: 'SWE19', selecao: 'Suecia', jogador: 'Alexander Isak', status: 0},
+            {codigo: 'SWE20', selecao: 'Suecia', jogador: 'Viktor Gyökeres', status: 0},
+            {codigo: 'TUN1', selecao: 'Tunisia', jogador: '', status: 0},
+            {codigo: 'TUN2', selecao: 'Tunisia', jogador: 'Bechir Ben Said', status: 0},
+            {codigo: 'TUN3', selecao: 'Tunisia', jogador: 'Aymen Dahmen', status: 0},
+            {codigo: 'TUN4', selecao: 'Tunisia', jogador: 'Van Valery', status: 0},
+            {codigo: 'TUN5', selecao: 'Tunisia', jogador: 'Montassar Talbi', status: 0},
+            {codigo: 'TUN6', selecao: 'Tunisia', jogador: 'Yassine Meriah', status: 0},
+            {codigo: 'TUN7', selecao: 'Tunisia', jogador: 'Ali Abdi', status: 0},
+            {codigo: 'TUN8', selecao: 'Tunisia', jogador: 'Dylan Bronn', status: 0},
+            {codigo: 'TUN9', selecao: 'Tunisia', jogador: 'Ellyes Skhiri', status: 0},
+            {codigo: 'TUN10', selecao: 'Tunisia', jogador: 'Aissa Laidouni', status: 0},
+            {codigo: 'TUN11', selecao: 'Tunisia', jogador: 'Ferjani Sassi', status: 0},
+            {codigo: 'TUN12', selecao: 'Tunisia', jogador: 'Mohamed Ali Ben Romdhane', status: 0},
+            {codigo: 'TUN13', selecao: 'Tunisia', jogador: '', status: 0},
+            {codigo: 'TUN14', selecao: 'Tunisia', jogador: 'Hannibal Mejbri', status: 0},
+            {codigo: 'TUN15', selecao: 'Tunisia', jogador: 'Elias Achouri', status: 0},
+            {codigo: 'TUN16', selecao: 'Tunisia', jogador: 'Elias Saad', status: 0},
+            {codigo: 'TUN17', selecao: 'Tunisia', jogador: 'Hazem Mastouri', status: 0},
+            {codigo: 'TUN18', selecao: 'Tunisia', jogador: 'Ismael Gharbi', status: 0},
+            {codigo: 'TUN19', selecao: 'Tunisia', jogador: 'Sayfallah Ltaief', status: 0},
+            {codigo: 'TUN20', selecao: 'Tunisia', jogador: 'Naim Sliti', status: 0},
+            {codigo: 'BEL1', selecao: 'Belgica', jogador: '', status: 0},
+            {codigo: 'BEL2', selecao: 'Belgica', jogador: 'Thibaut Courtois', status: 0},
+            {codigo: 'BEL3', selecao: 'Belgica', jogador: 'Arthur Theate', status: 0},
+            {codigo: 'BEL4', selecao: 'Belgica', jogador: 'Timothy Castagne', status: 0},
+            {codigo: 'BEL5', selecao: 'Belgica', jogador: 'Zeno Debast', status: 0},
+            {codigo: 'BEL6', selecao: 'Belgica', jogador: 'Brandon Mechele', status: 0},
+            {codigo: 'BEL7', selecao: 'Belgica', jogador: 'Maxim De Cuyper', status: 0},
+            {codigo: 'BEL8', selecao: 'Belgica', jogador: 'Thomas Meunier', status: 0},
+            {codigo: 'BEL9', selecao: 'Belgica', jogador: 'Youri Tielemans', status: 0},
+            {codigo: 'BEL10', selecao: 'Belgica', jogador: 'Amadou Onana', status: 0},
+            {codigo: 'BEL11', selecao: 'Belgica', jogador: 'Nicolas Raskin', status: 0},
+            {codigo: 'BEL12', selecao: 'Belgica', jogador: 'Alexis Saelemaekers', status: 0},
+            {codigo: 'BEL13', selecao: 'Belgica', jogador: '', status: 0},
+            {codigo: 'BEL14', selecao: 'Belgica', jogador: 'Hans Vanaken', status: 0},
+            {codigo: 'BEL15', selecao: 'Belgica', jogador: 'Kevin De Bruyne', status: 0},
+            {codigo: 'BEL16', selecao: 'Belgica', jogador: 'Jérémy Doku', status: 0},
+            {codigo: 'BEL17', selecao: 'Belgica', jogador: 'Charles De Ketelaere', status: 0},
+            {codigo: 'BEL18', selecao: 'Belgica', jogador: 'Leandro Trossard', status: 0},
+            {codigo: 'BEL19', selecao: 'Belgica', jogador: 'Loïs Openda', status: 0},
+            {codigo: 'BEL20', selecao: 'Belgica', jogador: 'Romelu Lukaku', status: 0},
+            {codigo: 'EGY1', selecao: 'Egito', jogador: '', status: 0},
+            {codigo: 'EGY2', selecao: 'Egito', jogador: 'Mohamed El Shenawy', status: 0},
+            {codigo: 'EGY3', selecao: 'Egito', jogador: 'Mohamed Hany', status: 0},
+            {codigo: 'EGY4', selecao: 'Egito', jogador: 'Mohamed Hamdy', status: 0},
+            {codigo: 'EGY5', selecao: 'Egito', jogador: 'Yasser Ibrahim', status: 0},
+            {codigo: 'EGY6', selecao: 'Egito', jogador: 'Khaled Sobhi', status: 0},
+            {codigo: 'EGY7', selecao: 'Egito', jogador: 'Ramy Rabia', status: 0},
+            {codigo: 'EGY8', selecao: 'Egito', jogador: 'Hossam Abdelmaguid', status: 0},
+            {codigo: 'EGY9', selecao: 'Egito', jogador: 'Ahmed Fatouh', status: 0},
+            {codigo: 'EGY10', selecao: 'Egito', jogador: 'Marwan Attia', status: 0},
+            {codigo: 'EGY11', selecao: 'Egito', jogador: 'Zizo', status: 0},
+            {codigo: 'EGY12', selecao: 'Egito', jogador: 'Hamdy Fathy', status: 0},
+            {codigo: 'EGY13', selecao: 'Egito', jogador: '', status: 0},
+            {codigo: 'EGY14', selecao: 'Egito', jogador: 'Mohamed Lasheen', status: 0},
+            {codigo: 'EGY15', selecao: 'Egito', jogador: 'Emam Ashour', status: 0},
+            {codigo: 'EGY16', selecao: 'Egito', jogador: 'Osama Faisal', status: 0},
+            {codigo: 'EGY17', selecao: 'Egito', jogador: 'Mohamed Salah', status: 0},
+            {codigo: 'EGY18', selecao: 'Egito', jogador: 'Mostafa Mohamed', status: 0},
+            {codigo: 'EGY19', selecao: 'Egito', jogador: 'Trezeguet', status: 0},
+            {codigo: 'EGY20', selecao: 'Egito', jogador: 'Omar Marmoush', status: 0},
+            {codigo: 'IRN1', selecao: 'Ira', jogador: '', status: 0},
+            {codigo: 'IRN2', selecao: 'Ira', jogador: 'Alireza Beiranvand', status: 0},
+            {codigo: 'IRN3', selecao: 'Ira', jogador: 'Morteza Pouraliganji', status: 0},
+            {codigo: 'IRN4', selecao: 'Ira', jogador: 'Ehsan Hajsafi', status: 0},
+            {codigo: 'IRN5', selecao: 'Ira', jogador: 'Milad Mohammadi', status: 0},
+            {codigo: 'IRN6', selecao: 'Ira', jogador: 'Shoja Khalilzadeh', status: 0},
+            {codigo: 'IRN7', selecao: 'Ira', jogador: 'Ramin Rezaeian', status: 0},
+            {codigo: 'IRN8', selecao: 'Ira', jogador: 'Hossein Kanaani', status: 0},
+            {codigo: 'IRN9', selecao: 'Ira', jogador: 'Sadegh Moharrami', status: 0},
+            {codigo: 'IRN10', selecao: 'Ira', jogador: 'Saleh Hardani', status: 0},
+            {codigo: 'IRN11', selecao: 'Ira', jogador: 'Saeed Ezatolahi', status: 0},
+            {codigo: 'IRN12', selecao: 'Ira', jogador: 'Saman Ghoddos', status: 0},
+            {codigo: 'IRN13', selecao: 'Ira', jogador: '', status: 0},
+            {codigo: 'IRN14', selecao: 'Ira', jogador: 'Omid Noorafkan', status: 0},
+            {codigo: 'IRN15', selecao: 'Ira', jogador: 'Roozbeh Cheshmi', status: 0},
+            {codigo: 'IRN16', selecao: 'Ira', jogador: 'Mohammad Mohebi', status: 0},
+            {codigo: 'IRN17', selecao: 'Ira', jogador: 'Sardar Azmoun', status: 0},
+            {codigo: 'IRN18', selecao: 'Ira', jogador: 'Mehdi Taremi', status: 0},
+            {codigo: 'IRN19', selecao: 'Ira', jogador: 'Alireza Jahanbakhsh', status: 0},
+            {codigo: 'IRN20', selecao: 'Ira', jogador: 'Ali Gholizadeh', status: 0},
+            {codigo: 'NZL1', selecao: 'Nova Zelandia', jogador: '', status: 0},
+            {codigo: 'NZL2', selecao: 'Nova Zelandia', jogador: 'Max Crocombe-Payne', status: 0},
+            {codigo: 'NZL3', selecao: 'Nova Zelandia', jogador: 'Alex Paulsen', status: 0},
+            {codigo: 'NZL4', selecao: 'Nova Zelandia', jogador: 'Michael Boxall', status: 0},
+            {codigo: 'NZL5', selecao: 'Nova Zelandia', jogador: 'Liberato Cacace', status: 0},
+            {codigo: 'NZL6', selecao: 'Nova Zelandia', jogador: 'Tim Payne', status: 0},
+            {codigo: 'NZL7', selecao: 'Nova Zelandia', jogador: 'Tyler Bindon', status: 0},
+            {codigo: 'NZL8', selecao: 'Nova Zelandia', jogador: 'Francis de Vries', status: 0},
+            {codigo: 'NZL9', selecao: 'Nova Zelandia', jogador: 'Finn Surman', status: 0},
+            {codigo: 'NZL10', selecao: 'Nova Zelandia', jogador: 'Joe Bell', status: 0},
+            {codigo: 'NZL11', selecao: 'Nova Zelandia', jogador: 'Sarpreet Singh', status: 0},
+            {codigo: 'NZL12', selecao: 'Nova Zelandia', jogador: 'Ryan Thomas', status: 0},
+            {codigo: 'NZL13', selecao: 'Nova Zelandia', jogador: '', status: 0},
+            {codigo: 'NZL14', selecao: 'Nova Zelandia', jogador: 'Matthew Garbett', status: 0},
+            {codigo: 'NZL15', selecao: 'Nova Zelandia', jogador: 'Marko Stamenić', status: 0},
+            {codigo: 'NZL16', selecao: 'Nova Zelandia', jogador: 'Ben Old', status: 0},
+            {codigo: 'NZL17', selecao: 'Nova Zelandia', jogador: 'Chris Wood', status: 0},
+            {codigo: 'NZL18', selecao: 'Nova Zelandia', jogador: 'Elijah Just', status: 0},
+            {codigo: 'NZL19', selecao: 'Nova Zelandia', jogador: 'Callum McCowatt', status: 0},
+            {codigo: 'NZL20', selecao: 'Nova Zelandia', jogador: 'Kosta Barbarouses', status: 0},
+            {codigo: 'ESP1', selecao: 'Espanha', jogador: '', status: 0},
+            {codigo: 'ESP2', selecao: 'Espanha', jogador: 'Unai Simón', status: 0},
+            {codigo: 'ESP3', selecao: 'Espanha', jogador: 'Robin Le Normand', status: 0},
+            {codigo: 'ESP4', selecao: 'Espanha', jogador: 'Aymeric Laporte', status: 0},
+            {codigo: 'ESP5', selecao: 'Espanha', jogador: 'Dean Huijsen', status: 0},
+            {codigo: 'ESP6', selecao: 'Espanha', jogador: 'Pedro Porro', status: 0},
+            {codigo: 'ESP7', selecao: 'Espanha', jogador: 'Dani Carvajal', status: 0},
+            {codigo: 'ESP8', selecao: 'Espanha', jogador: 'Marc Cucurella', status: 0},
+            {codigo: 'ESP9', selecao: 'Espanha', jogador: 'Martín Zubimendi', status: 0},
+            {codigo: 'ESP10', selecao: 'Espanha', jogador: 'Rodri', status: 0},
+            {codigo: 'ESP11', selecao: 'Espanha', jogador: 'Pedri', status: 0},
+            {codigo: 'ESP12', selecao: 'Espanha', jogador: 'Fabián Ruiz', status: 0},
+            {codigo: 'ESP13', selecao: 'Espanha', jogador: '', status: 0},
+            {codigo: 'ESP14', selecao: 'Espanha', jogador: 'Mikel Merino', status: 0},
+            {codigo: 'ESP15', selecao: 'Espanha', jogador: 'Lamine Yamal', status: 0},
+            {codigo: 'ESP16', selecao: 'Espanha', jogador: 'Dani Olmo', status: 0},
+            {codigo: 'ESP17', selecao: 'Espanha', jogador: 'Nico Williams', status: 0},
+            {codigo: 'ESP18', selecao: 'Espanha', jogador: 'Ferran Torres', status: 0},
+            {codigo: 'ESP19', selecao: 'Espanha', jogador: 'Álvaro Morata', status: 0},
+            {codigo: 'ESP20', selecao: 'Espanha', jogador: 'Mikel Oyarzabal', status: 0},
+            {codigo: 'CPV1', selecao: 'Cabo Verde', jogador: '', status: 0},
+            {codigo: 'CPV2', selecao: 'Cabo Verde', jogador: 'Vozinha', status: 0},
+            {codigo: 'CPV3', selecao: 'Cabo Verde', jogador: 'Logan Costa', status: 0},
+            {codigo: 'CPV4', selecao: 'Cabo Verde', jogador: 'Pico', status: 0},
+            {codigo: 'CPV5', selecao: 'Cabo Verde', jogador: 'Diney', status: 0},
+            {codigo: 'CPV6', selecao: 'Cabo Verde', jogador: 'Steven Moreira', status: 0},
+            {codigo: 'CPV7', selecao: 'Cabo Verde', jogador: 'Wagner Pina', status: 0},
+            {codigo: 'CPV8', selecao: 'Cabo Verde', jogador: 'João Paulo', status: 0},
+            {codigo: 'CPV9', selecao: 'Cabo Verde', jogador: 'Yannick Semedo', status: 0},
+            {codigo: 'CPV10', selecao: 'Cabo Verde', jogador: 'Kevin Pina', status: 0},
+            {codigo: 'CPV11', selecao: 'Cabo Verde', jogador: 'Patrick Andrade', status: 0},
+            {codigo: 'CPV12', selecao: 'Cabo Verde', jogador: 'Jamiro Monteiro', status: 0},
+            {codigo: 'CPV13', selecao: 'Cabo Verde', jogador: '', status: 0},
+            {codigo: 'CPV14', selecao: 'Cabo Verde', jogador: 'Deroy Duarte', status: 0},
+            {codigo: 'CPV15', selecao: 'Cabo Verde', jogador: 'Garry Rodrigues', status: 0},
+            {codigo: 'CPV16', selecao: 'Cabo Verde', jogador: 'Jovane Cabral', status: 0},
+            {codigo: 'CPV17', selecao: 'Cabo Verde', jogador: 'Ryan Mendes', status: 0},
+            {codigo: 'CPV18', selecao: 'Cabo Verde', jogador: 'Dailon Livramento', status: 0},
+            {codigo: 'CPV19', selecao: 'Cabo Verde', jogador: 'Willy Semedo', status: 0},
+            {codigo: 'CPV20', selecao: 'Cabo Verde', jogador: 'Bebé', status: 0},
+            {codigo: 'KSA1', selecao: 'Arabia Saudita', jogador: '', status: 0},
+            {codigo: 'KSA2', selecao: 'Arabia Saudita', jogador: 'Nawaf Alaqidi', status: 0},
+            {codigo: 'KSA3', selecao: 'Arabia Saudita', jogador: 'Abdulrahman Al-Sanbi', status: 0},
+            {codigo: 'KSA4', selecao: 'Arabia Saudita', jogador: 'Saud Abdulhamid', status: 0},
+            {codigo: 'KSA5', selecao: 'Arabia Saudita', jogador: 'Nawaf Boushal', status: 0},
+            {codigo: 'KSA6', selecao: 'Arabia Saudita', jogador: 'Jihad Thakri', status: 0},
+            {codigo: 'KSA7', selecao: 'Arabia Saudita', jogador: 'Moteb Al-Harbi', status: 0},
+            {codigo: 'KSA8', selecao: 'Arabia Saudita', jogador: 'Hassan Altambakti', status: 0},
+            {codigo: 'KSA9', selecao: 'Arabia Saudita', jogador: 'Musab Aljuwayr', status: 0},
+            {codigo: 'KSA10', selecao: 'Arabia Saudita', jogador: 'Ziyad Aljohani', status: 0},
+            {codigo: 'KSA11', selecao: 'Arabia Saudita', jogador: 'Abdullah Alkhaibari', status: 0},
+            {codigo: 'KSA12', selecao: 'Arabia Saudita', jogador: 'Nasser Aldawsari', status: 0},
+            {codigo: 'KSA13', selecao: 'Arabia Saudita', jogador: '', status: 0},
+            {codigo: 'KSA14', selecao: 'Arabia Saudita', jogador: 'Saleh Abu Alshamat', status: 0},
+            {codigo: 'KSA15', selecao: 'Arabia Saudita', jogador: 'Marwan Alsahafi', status: 0},
+            {codigo: 'KSA16', selecao: 'Arabia Saudita', jogador: 'Salem Aldawsari', status: 0},
+            {codigo: 'KSA17', selecao: 'Arabia Saudita', jogador: 'Abdulrahman Al-Aboud', status: 0},
+            {codigo: 'KSA18', selecao: 'Arabia Saudita', jogador: 'Feras Albrikan', status: 0},
+            {codigo: 'KSA19', selecao: 'Arabia Saudita', jogador: 'Saleh Alshehri', status: 0},
+            {codigo: 'KSA20', selecao: 'Arabia Saudita', jogador: 'Abdullah Al-Hamdan', status: 0},
+            {codigo: 'URU1', selecao: 'Uruguai', jogador: '', status: 0},
+            {codigo: 'URU2', selecao: 'Uruguai', jogador: 'Sergio Rochet', status: 0},
+            {codigo: 'URU3', selecao: 'Uruguai', jogador: 'Santiago Mele', status: 0},
+            {codigo: 'URU4', selecao: 'Uruguai', jogador: 'Ronald Araujo', status: 0},
+            {codigo: 'URU5', selecao: 'Uruguai', jogador: 'José María Giménez', status: 0},
+            {codigo: 'URU6', selecao: 'Uruguai', jogador: 'Sebastian Caceres', status: 0},
+            {codigo: 'URU7', selecao: 'Uruguai', jogador: 'Mathias Olivera', status: 0},
+            {codigo: 'URU8', selecao: 'Uruguai', jogador: 'Guillermo Varela', status: 0},
+            {codigo: 'URU9', selecao: 'Uruguai', jogador: 'Nahitan Nandez', status: 0},
+            {codigo: 'URU10', selecao: 'Uruguai', jogador: 'Federico Valverde', status: 0},
+            {codigo: 'URU11', selecao: 'Uruguai', jogador: 'Giorgian De Arrascaeta', status: 0},
+            {codigo: 'URU12', selecao: 'Uruguai', jogador: 'Rodrigo Bentancur', status: 0},
+            {codigo: 'URU13', selecao: 'Uruguai', jogador: '', status: 0},
+            {codigo: 'URU14', selecao: 'Uruguai', jogador: 'Manuel Ugarte', status: 0},
+            {codigo: 'URU15', selecao: 'Uruguai', jogador: 'Nicolás de la Cruz', status: 0},
+            {codigo: 'URU16', selecao: 'Uruguai', jogador: 'Maxi Araujo', status: 0},
+            {codigo: 'URU17', selecao: 'Uruguai', jogador: 'Darwin Núñez', status: 0},
+            {codigo: 'URU18', selecao: 'Uruguai', jogador: 'Federico Viñas', status: 0},
+            {codigo: 'URU19', selecao: 'Uruguai', jogador: 'Rodrigo Aguirre', status: 0},
+            {codigo: 'URU20', selecao: 'Uruguai', jogador: 'Facundo Pellistri', status: 0},
+            {codigo: 'FRA1', selecao: 'Franca', jogador: '', status: 0},
+            {codigo: 'FRA2', selecao: 'Franca', jogador: 'Mike Maignan', status: 0},
+            {codigo: 'FRA3', selecao: 'Franca', jogador: 'Theo Hernández', status: 0},
+            {codigo: 'FRA4', selecao: 'Franca', jogador: 'William Saliba', status: 0},
+            {codigo: 'FRA5', selecao: 'Franca', jogador: 'Jules Koundé', status: 0},
+            {codigo: 'FRA6', selecao: 'Franca', jogador: 'Ibrahima Konaté', status: 0},
+            {codigo: 'FRA7', selecao: 'Franca', jogador: 'Dayot Upamecano', status: 0},
+            {codigo: 'FRA8', selecao: 'Franca', jogador: 'Lucas Digne', status: 0},
+            {codigo: 'FRA9', selecao: 'Franca', jogador: 'Aurélien Tchouaméni', status: 0},
+            {codigo: 'FRA10', selecao: 'Franca', jogador: 'Eduardo Camavinga', status: 0},
+            {codigo: 'FRA11', selecao: 'Franca', jogador: 'Manu Koné', status: 0},
+            {codigo: 'FRA12', selecao: 'Franca', jogador: 'Adrien Rabiot', status: 0},
+            {codigo: 'FRA13', selecao: 'Franca', jogador: '', status: 0},
+            {codigo: 'FRA14', selecao: 'Franca', jogador: 'Michael Olise', status: 0},
+            {codigo: 'FRA15', selecao: 'Franca', jogador: 'Ousmane Dembélé', status: 0},
+            {codigo: 'FRA16', selecao: 'Franca', jogador: 'Bradley Barcola', status: 0},
+            {codigo: 'FRA17', selecao: 'Franca', jogador: 'Désiré Doué', status: 0},
+            {codigo: 'FRA18', selecao: 'Franca', jogador: 'Kingsley Coman', status: 0},
+            {codigo: 'FRA19', selecao: 'Franca', jogador: 'Hugo Ekitike', status: 0},
+            {codigo: 'FRA20', selecao: 'Franca', jogador: 'Kylian Mbappé', status: 0},
+            {codigo: 'SEN1', selecao: 'Senegal', jogador: '', status: 0},
+            {codigo: 'SEN2', selecao: 'Senegal', jogador: 'Eduardo Mendy', status: 0},
+            {codigo: 'SEN3', selecao: 'Senegal', jogador: 'Yehvann Diouf', status: 0},
+            {codigo: 'SEN4', selecao: 'Senegal', jogador: 'Moussa Niakhaté', status: 0},
+            {codigo: 'SEN5', selecao: 'Senegal', jogador: 'Abdoulaye Seck', status: 0},
+            {codigo: 'SEN6', selecao: 'Senegal', jogador: 'Ismail Jakobs', status: 0},
+            {codigo: 'SEN7', selecao: 'Senegal', jogador: 'El Hadji Malick Diouf', status: 0},
+            {codigo: 'SEN8', selecao: 'Senegal', jogador: 'Kalidou Koulibaly', status: 0},
+            {codigo: 'SEN9', selecao: 'Senegal', jogador: 'Idrissa Gana Gueye', status: 0},
+            {codigo: 'SEN10', selecao: 'Senegal', jogador: 'Pape Matar Sarr', status: 0},
+            {codigo: 'SEN11', selecao: 'Senegal', jogador: 'Pape Gueye', status: 0},
+            {codigo: 'SEN12', selecao: 'Senegal', jogador: 'Habib Diarra', status: 0},
+            {codigo: 'SEN13', selecao: 'Senegal', jogador: '', status: 0},
+            {codigo: 'SEN14', selecao: 'Senegal', jogador: 'Lamine Camara', status: 0},
+            {codigo: 'SEN15', selecao: 'Senegal', jogador: 'Sadio Mane', status: 0},
+            {codigo: 'SEN16', selecao: 'Senegal', jogador: 'Ismaïla Sarr', status: 0},
+            {codigo: 'SEN17', selecao: 'Senegal', jogador: 'Boulaye Dia', status: 0},
+            {codigo: 'SEN18', selecao: 'Senegal', jogador: 'Iliman Ndiaye', status: 0},
+            {codigo: 'SEN19', selecao: 'Senegal', jogador: 'Nicolas Jackson', status: 0},
+            {codigo: 'SEN20', selecao: 'Senegal', jogador: 'Krepin Diatta', status: 0},
+            {codigo: 'IRQ1', selecao: 'Iraque', jogador: '', status: 0},
+            {codigo: 'IRQ2', selecao: 'Iraque', jogador: 'Jalal Hassan', status: 0},
+            {codigo: 'IRQ3', selecao: 'Iraque', jogador: 'Rebin Sulaka', status: 0},
+            {codigo: 'IRQ4', selecao: 'Iraque', jogador: 'Hussein Ali', status: 0},
+            {codigo: 'IRQ5', selecao: 'Iraque', jogador: 'Akam Hashem', status: 0},
+            {codigo: 'IRQ6', selecao: 'Iraque', jogador: 'Merchas Doski', status: 0},
+            {codigo: 'IRQ7', selecao: 'Iraque', jogador: 'Zaid Tahseen', status: 0},
+            {codigo: 'IRQ8', selecao: 'Iraque', jogador: 'Manaf Younis', status: 0},
+            {codigo: 'IRQ9', selecao: 'Iraque', jogador: 'Zidane Iqbal', status: 0},
+            {codigo: 'IRQ10', selecao: 'Iraque', jogador: 'Amir Al-Ammari', status: 0},
+            {codigo: 'IRQ11', selecao: 'Iraque', jogador: 'Ibrahim Bayesh', status: 0},
+            {codigo: 'IRQ12', selecao: 'Iraque', jogador: 'Ali Jasim', status: 0},
+            {codigo: 'IRQ13', selecao: 'Iraque', jogador: '', status: 0},
+            {codigo: 'IRQ14', selecao: 'Iraque', jogador: 'Youssef Amyn', status: 0},
+            {codigo: 'IRQ15', selecao: 'Iraque', jogador: 'Aimar Sher', status: 0},
+            {codigo: 'IRQ16', selecao: 'Iraque', jogador: 'Marko Farji', status: 0},
+            {codigo: 'IRQ17', selecao: 'Iraque', jogador: 'Osama Rashid', status: 0},
+            {codigo: 'IRQ18', selecao: 'Iraque', jogador: 'Ali Al-Hamadi', status: 0},
+            {codigo: 'IRQ19', selecao: 'Iraque', jogador: 'Aymen Hussein', status: 0},
+            {codigo: 'IRQ20', selecao: 'Iraque', jogador: 'Mohanad Ali', status: 0},
+            {codigo: 'NOR1', selecao: 'Noruega', jogador: '', status: 0},
+            {codigo: 'NOR2', selecao: 'Noruega', jogador: 'Ørjan Nyland', status: 0},
+            {codigo: 'NOR3', selecao: 'Noruega', jogador: 'Julian Ryerson', status: 0},
+            {codigo: 'NOR4', selecao: 'Noruega', jogador: 'Leo Østigård', status: 0},
+            {codigo: 'NOR5', selecao: 'Noruega', jogador: 'Kristoffer Ajer', status: 0},
+            {codigo: 'NOR6', selecao: 'Noruega', jogador: 'Marcus Holmgren Pedersen', status: 0},
+            {codigo: 'NOR7', selecao: 'Noruega', jogador: 'David Møller Wolfe', status: 0},
+            {codigo: 'NOR8', selecao: 'Noruega', jogador: 'Torbjørn Heggem', status: 0},
+            {codigo: 'NOR9', selecao: 'Noruega', jogador: 'Morten Thorsby', status: 0},
+            {codigo: 'NOR10', selecao: 'Noruega', jogador: 'Martin Ødegaard', status: 0},
+            {codigo: 'NOR11', selecao: 'Noruega', jogador: 'Sander Berge', status: 0},
+            {codigo: 'NOR12', selecao: 'Noruega', jogador: 'Andreas Schjelderup', status: 0},
+            {codigo: 'NOR13', selecao: 'Noruega', jogador: '', status: 0},
+            {codigo: 'NOR14', selecao: 'Noruega', jogador: 'Patrick Berg', status: 0},
+            {codigo: 'NOR15', selecao: 'Noruega', jogador: 'Erling Haaland', status: 0},
+            {codigo: 'NOR16', selecao: 'Noruega', jogador: 'Alexander Sørloth', status: 0},
+            {codigo: 'NOR17', selecao: 'Noruega', jogador: 'Aron Dønnum', status: 0},
+            {codigo: 'NOR18', selecao: 'Noruega', jogador: 'Jørgen Strand Larsen', status: 0},
+            {codigo: 'NOR19', selecao: 'Noruega', jogador: 'Antonio Nusa', status: 0},
+            {codigo: 'NOR20', selecao: 'Noruega', jogador: 'Oscar Bobb', status: 0},
+            {codigo: 'ARG1', selecao: 'Argentina', jogador: '', status: 0},
+            {codigo: 'ARG2', selecao: 'Argentina', jogador: 'Emiliano Martínez', status: 0},
+            {codigo: 'ARG3', selecao: 'Argentina', jogador: 'Nahuel Molina', status: 0},
+            {codigo: 'ARG4', selecao: 'Argentina', jogador: 'Cristian Romero', status: 0},
+            {codigo: 'ARG5', selecao: 'Argentina', jogador: 'Nicolás Otamendi', status: 0},
+            {codigo: 'ARG6', selecao: 'Argentina', jogador: 'Nicolás Tagliafico', status: 0},
+            {codigo: 'ARG7', selecao: 'Argentina', jogador: 'Leonardo Balerdi', status: 0},
+            {codigo: 'ARG8', selecao: 'Argentina', jogador: 'Enzo Fernández', status: 0},
+            {codigo: 'ARG9', selecao: 'Argentina', jogador: 'Alexis Mac Allister', status: 0},
+            {codigo: 'ARG10', selecao: 'Argentina', jogador: 'Rodrigo De Paul', status: 0},
+            {codigo: 'ARG11', selecao: 'Argentina', jogador: 'Exequiel Palacios', status: 0},
+            {codigo: 'ARG12', selecao: 'Argentina', jogador: 'Leandro Paredes', status: 0},
+            {codigo: 'ARG13', selecao: 'Argentina', jogador: '', status: 0},
+            {codigo: 'ARG14', selecao: 'Argentina', jogador: 'Nico Paz', status: 0},
+            {codigo: 'ARG15', selecao: 'Argentina', jogador: 'Franco Mastantuono', status: 0},
+            {codigo: 'ARG16', selecao: 'Argentina', jogador: 'Nico González', status: 0},
+            {codigo: 'ARG17', selecao: 'Argentina', jogador: 'Lionel Messi', status: 0},
+            {codigo: 'ARG18', selecao: 'Argentina', jogador: 'Lautaro Martínez', status: 0},
+            {codigo: 'ARG19', selecao: 'Argentina', jogador: 'Julián Álvarez', status: 0},
+            {codigo: 'ARG20', selecao: 'Argentina', jogador: 'Giuliano Simeone', status: 0},
+            {codigo: 'ALG1', selecao: 'Algeria', jogador: '', status: 0},
+            {codigo: 'ALG2', selecao: 'Algeria', jogador: 'Alexis Guendouz', status: 0},
+            {codigo: 'ALG3', selecao: 'Algeria', jogador: 'Ramy Bensebaini', status: 0},
+            {codigo: 'ALG4', selecao: 'Algeria', jogador: 'Youcef Atal', status: 0},
+            {codigo: 'ALG5', selecao: 'Algeria', jogador: 'Rayan Aït-Nouri', status: 0},
+            {codigo: 'ALG6', selecao: 'Algeria', jogador: 'Mohamed Amine Tougai', status: 0},
+            {codigo: 'ALG7', selecao: 'Algeria', jogador: 'Aïssa Mandi', status: 0},
+            {codigo: 'ALG8', selecao: 'Algeria', jogador: 'Ismael Bennacer', status: 0},
+            {codigo: 'ALG9', selecao: 'Algeria', jogador: 'Houssem Aouar', status: 0},
+            {codigo: 'ALG10', selecao: 'Algeria', jogador: 'Hicham Boudaoui', status: 0},
+            {codigo: 'ALG11', selecao: 'Algeria', jogador: 'Ramiz Zerrouki', status: 0},
+            {codigo: 'ALG12', selecao: 'Algeria', jogador: 'Nabil Bentaleb', status: 0},
+            {codigo: 'ALG13', selecao: 'Algeria', jogador: '', status: 0},
+            {codigo: 'ALG14', selecao: 'Algeria', jogador: 'Farés Chaibi', status: 0},
+            {codigo: 'ALG15', selecao: 'Algeria', jogador: 'Riyad Mahrez', status: 0},
+            {codigo: 'ALG16', selecao: 'Algeria', jogador: 'Said Benrahma', status: 0},
+            {codigo: 'ALG17', selecao: 'Algeria', jogador: 'Anis Hadj Moussa', status: 0},
+            {codigo: 'ALG18', selecao: 'Algeria', jogador: 'Amine Gouiri', status: 0},
+            {codigo: 'ALG19', selecao: 'Algeria', jogador: 'Baghdad Bounedjah', status: 0},
+            {codigo: 'ALG20', selecao: 'Algeria', jogador: 'Mohammed Amoura', status: 0},
+            {codigo: 'AUT1', selecao: 'Austria', jogador: '', status: 0},
+            {codigo: 'AUT2', selecao: 'Austria', jogador: 'Alexander Schlager', status: 0},
+            {codigo: 'AUT3', selecao: 'Austria', jogador: 'Patrick Pentz', status: 0},
+            {codigo: 'AUT4', selecao: 'Austria', jogador: 'David Alaba', status: 0},
+            {codigo: 'AUT5', selecao: 'Austria', jogador: 'Kevin Danso', status: 0},
+            {codigo: 'AUT6', selecao: 'Austria', jogador: 'Philipp Lienhart', status: 0},
+            {codigo: 'AUT7', selecao: 'Austria', jogador: 'Stefan Posch', status: 0},
+            {codigo: 'AUT8', selecao: 'Austria', jogador: 'Phillipp Mwene', status: 0},
+            {codigo: 'AUT9', selecao: 'Austria', jogador: 'Alexander Prass', status: 0},
+            {codigo: 'AUT10', selecao: 'Austria', jogador: 'Xaver Schlager', status: 0},
+            {codigo: 'AUT11', selecao: 'Austria', jogador: 'Marcel Sabitzer', status: 0},
+            {codigo: 'AUT12', selecao: 'Austria', jogador: 'Konrad Laimer', status: 0},
+            {codigo: 'AUT13', selecao: 'Austria', jogador: '', status: 0},
+            {codigo: 'AUT14', selecao: 'Austria', jogador: 'Florian Grillitsch', status: 0},
+            {codigo: 'AUT15', selecao: 'Austria', jogador: 'Nicolas Seiwald', status: 0},
+            {codigo: 'AUT16', selecao: 'Austria', jogador: 'Romano Schmid', status: 0},
+            {codigo: 'AUT17', selecao: 'Austria', jogador: 'Patrick Wimmer', status: 0},
+            {codigo: 'AUT18', selecao: 'Austria', jogador: 'Christoph Baumgartner', status: 0},
+            {codigo: 'AUT19', selecao: 'Austria', jogador: 'Michael Gregoritsch', status: 0},
+            {codigo: 'AUT20', selecao: 'Austria', jogador: 'Marko Arnautović', status: 0},
+            {codigo: 'JOR1', selecao: 'Jordania', jogador: '', status: 0},
+            {codigo: 'JOR2', selecao: 'Jordania', jogador: 'Yazeed Abulaila', status: 0},
+            {codigo: 'JOR3', selecao: 'Jordania', jogador: 'Ihsan Haddad', status: 0},
+            {codigo: 'JOR4', selecao: 'Jordania', jogador: 'Mohammad Abu Hashish', status: 0},
+            {codigo: 'JOR5', selecao: 'Jordania', jogador: 'Yazan Al-Arab', status: 0},
+            {codigo: 'JOR6', selecao: 'Jordania', jogador: 'Abdallah Nasib', status: 0},
+            {codigo: 'JOR7', selecao: 'Jordania', jogador: 'Saleem Obaid', status: 0},
+            {codigo: 'JOR8', selecao: 'Jordania', jogador: 'Mohammad Abualnadi', status: 0},
+            {codigo: 'JOR9', selecao: 'Jordania', jogador: 'Ibrahim Saadeh', status: 0},
+            {codigo: 'JOR10', selecao: 'Jordania', jogador: 'Nizar Al-Rashdan', status: 0},
+            {codigo: 'JOR11', selecao: 'Jordania', jogador: 'Noor Al-Rawabdeh', status: 0},
+            {codigo: 'JOR12', selecao: 'Jordania', jogador: 'Mohannad Abu Taha', status: 0},
+            {codigo: 'JOR13', selecao: 'Jordania', jogador: '', status: 0},
+            {codigo: 'JOR14', selecao: 'Jordania', jogador: 'Amer Jamous', status: 0},
+            {codigo: 'JOR15', selecao: 'Jordania', jogador: 'Musa Al-Taamari', status: 0},
+            {codigo: 'JOR16', selecao: 'Jordania', jogador: 'Yazan Al-Naimat', status: 0},
+            {codigo: 'JOR17', selecao: 'Jordania', jogador: 'Mahmoud Al-Mardi', status: 0},
+            {codigo: 'JOR18', selecao: 'Jordania', jogador: 'Ali Olwan', status: 0},
+            {codigo: 'JOR19', selecao: 'Jordania', jogador: 'Mohammad Abu Zrayq', status: 0},
+            {codigo: 'JOR20', selecao: 'Jordania', jogador: 'Ibrahim Sabra', status: 0},
+            {codigo: 'POR1', selecao: 'Portugal', jogador: '', status: 0},
+            {codigo: 'POR2', selecao: 'Portugal', jogador: 'Diogo Costa', status: 0},
+            {codigo: 'POR3', selecao: 'Portugal', jogador: 'Jose Sa', status: 0},
+            {codigo: 'POR4', selecao: 'Portugal', jogador: 'Ruben Dias', status: 0},
+            {codigo: 'POR5', selecao: 'Portugal', jogador: 'João Cancelo', status: 0},
+            {codigo: 'POR6', selecao: 'Portugal', jogador: 'Diogo Dalot', status: 0},
+            {codigo: 'POR7', selecao: 'Portugal', jogador: 'Nuno Mendes', status: 0},
+            {codigo: 'POR8', selecao: 'Portugal', jogador: 'Gonçalo Inácio', status: 0},
+            {codigo: 'POR9', selecao: 'Portugal', jogador: 'Bernardo Silva', status: 0},
+            {codigo: 'POR10', selecao: 'Portugal', jogador: 'Bruno Fernandes', status: 0},
+            {codigo: 'POR11', selecao: 'Portugal', jogador: 'Ruben Neves', status: 0},
+            {codigo: 'POR12', selecao: 'Portugal', jogador: 'Vitinha', status: 0},
+            {codigo: 'POR13', selecao: 'Portugal', jogador: '', status: 0},
+            {codigo: 'POR14', selecao: 'Portugal', jogador: 'João Neves', status: 0},
+            {codigo: 'POR15', selecao: 'Portugal', jogador: 'Cristiano Ronaldo', status: 0},
+            {codigo: 'POR16', selecao: 'Portugal', jogador: 'Francisco Trincão', status: 0},
+            {codigo: 'POR17', selecao: 'Portugal', jogador: 'João Felix', status: 0},
+            {codigo: 'POR18', selecao: 'Portugal', jogador: 'Gonçalo Ramos', status: 0},
+            {codigo: 'POR19', selecao: 'Portugal', jogador: 'Pedro Neto', status: 0},
+            {codigo: 'POR20', selecao: 'Portugal', jogador: 'Rafael Leão', status: 0},
+            {codigo: 'COD1', selecao: 'Congo', jogador: '', status: 0},
+            {codigo: 'COD2', selecao: 'Congo', jogador: 'Lionel Mpasi', status: 0},
+            {codigo: 'COD3', selecao: 'Congo', jogador: 'Aaron Wan-Bissaka', status: 0},
+            {codigo: 'COD4', selecao: 'Congo', jogador: 'Axel Tuanzebe', status: 0},
+            {codigo: 'COD5', selecao: 'Congo', jogador: 'Arthur Masuaku', status: 0},
+            {codigo: 'COD6', selecao: 'Congo', jogador: 'Chancel Mbemba', status: 0},
+            {codigo: 'COD7', selecao: 'Congo', jogador: 'Joris Kayembe', status: 0},
+            {codigo: 'COD8', selecao: 'Congo', jogador: 'Charles Pickel', status: 0},
+            {codigo: 'COD9', selecao: 'Congo', jogador: 'Ngal’ayel Mukau', status: 0},
+            {codigo: 'COD10', selecao: 'Congo', jogador: 'Edo Kayembe', status: 0},
+            {codigo: 'COD11', selecao: 'Congo', jogador: 'Samuel Moutoussamy', status: 0},
+            {codigo: 'COD12', selecao: 'Congo', jogador: 'Noah Sadiki', status: 0},
+            {codigo: 'COD13', selecao: 'Congo', jogador: '', status: 0},
+            {codigo: 'COD14', selecao: 'Congo', jogador: 'Théo Bongonda', status: 0},
+            {codigo: 'COD15', selecao: 'Congo', jogador: 'Meschack Elia', status: 0},
+            {codigo: 'COD16', selecao: 'Congo', jogador: 'Yoane Wissa', status: 0},
+            {codigo: 'COD17', selecao: 'Congo', jogador: 'Brian Cipenga', status: 0},
+            {codigo: 'COD18', selecao: 'Congo', jogador: 'Fiston Mayele', status: 0},
+            {codigo: 'COD19', selecao: 'Congo', jogador: 'Cédric Bakambu', status: 0},
+            {codigo: 'COD20', selecao: 'Congo', jogador: 'Nathanaël Mbuku', status: 0},
+            {codigo: 'UZB1', selecao: 'Uzbequistao', jogador: '', status: 0},
+            {codigo: 'UZB2', selecao: 'Uzbequistao', jogador: 'Utkir Yusupov', status: 0},
+            {codigo: 'UZB3', selecao: 'Uzbequistao', jogador: 'Farrukh Savfiev', status: 0},
+            {codigo: 'UZB4', selecao: 'Uzbequistao', jogador: 'Sherzod Nasrullaev', status: 0},
+            {codigo: 'UZB5', selecao: 'Uzbequistao', jogador: 'Umar Eshmurodov', status: 0},
+            {codigo: 'UZB6', selecao: 'Uzbequistao', jogador: 'Husniddin Aliqulov', status: 0},
+            {codigo: 'UZB7', selecao: 'Uzbequistao', jogador: 'Rustamjon Ashurmatov', status: 0},
+            {codigo: 'UZB8', selecao: 'Uzbequistao', jogador: 'Khojiakbar Alijonov', status: 0},
+            {codigo: 'UZB9', selecao: 'Uzbequistao', jogador: 'Abdukodir Khusanov', status: 0},
+            {codigo: 'UZB10', selecao: 'Uzbequistao', jogador: 'Odiljon Hamrobekov', status: 0},
+            {codigo: 'UZB11', selecao: 'Uzbequistao', jogador: 'Otabek Shukurov', status: 0},
+            {codigo: 'UZB12', selecao: 'Uzbequistao', jogador: 'Jamshid Iskanderov', status: 0},
+            {codigo: 'UZB13', selecao: 'Uzbequistao', jogador: '', status: 0},
+            {codigo: 'UZB14', selecao: 'Uzbequistao', jogador: 'Azizbek Turgunboev', status: 0},
+            {codigo: 'UZB15', selecao: 'Uzbequistao', jogador: 'Khojimat Erkinov', status: 0},
+            {codigo: 'UZB16', selecao: 'Uzbequistao', jogador: 'Eldor Shomurodov', status: 0},
+            {codigo: 'UZB17', selecao: 'Uzbequistao', jogador: 'Oston Urunov', status: 0},
+            {codigo: 'UZB18', selecao: 'Uzbequistao', jogador: 'Jaloliddin Masharipov', status: 0},
+            {codigo: 'UZB19', selecao: 'Uzbequistao', jogador: 'Igor Sergeev', status: 0},
+            {codigo: 'UZB20', selecao: 'Uzbequistao', jogador: 'Abbosbek Fayzullaev', status: 0},
+            {codigo: 'COL1', selecao: 'Colombia', jogador: '', status: 0},
+            {codigo: 'COL2', selecao: 'Colombia', jogador: 'Camilo Vargas', status: 0},
+            {codigo: 'COL3', selecao: 'Colombia', jogador: 'David Ospina', status: 0},
+            {codigo: 'COL4', selecao: 'Colombia', jogador: 'Dávinson Sánchez', status: 0},
+            {codigo: 'COL5', selecao: 'Colombia', jogador: 'Yerry Mina', status: 0},
+            {codigo: 'COL6', selecao: 'Colombia', jogador: 'Daniel Muñoz', status: 0},
+            {codigo: 'COL7', selecao: 'Colombia', jogador: 'Johan Mojica', status: 0},
+            {codigo: 'COL8', selecao: 'Colombia', jogador: 'Jhon Lucumí', status: 0},
+            {codigo: 'COL9', selecao: 'Colombia', jogador: 'Santiago Arias', status: 0},
+            {codigo: 'COL10', selecao: 'Colombia', jogador: 'Jefferson Lerma', status: 0},
+            {codigo: 'COL11', selecao: 'Colombia', jogador: 'Kevin Castaño', status: 0},
+            {codigo: 'COL12', selecao: 'Colombia', jogador: 'Richard Ríos', status: 0},
+            {codigo: 'COL13', selecao: 'Colombia', jogador: '', status: 0},
+            {codigo: 'COL14', selecao: 'Colombia', jogador: 'James Rodríguez', status: 0},
+            {codigo: 'COL15', selecao: 'Colombia', jogador: 'Juan Fernando Quintero', status: 0},
+            {codigo: 'COL16', selecao: 'Colombia', jogador: 'Jorge Carrascal', status: 0},
+            {codigo: 'COL17', selecao: 'Colombia', jogador: 'Jhon Arias', status: 0},
+            {codigo: 'COL18', selecao: 'Colombia', jogador: 'Jhon Córdoba', status: 0},
+            {codigo: 'COL19', selecao: 'Colombia', jogador: 'Luis Suárez', status: 0},
+            {codigo: 'COL20', selecao: 'Colombia', jogador: 'Luis Díaz', status: 0},
+            {codigo: 'ENG1', selecao: 'Inglaterra', jogador: '', status: 0},
+            {codigo: 'ENG2', selecao: 'Inglaterra', jogador: 'Jordan Pickford', status: 0},
+            {codigo: 'ENG3', selecao: 'Inglaterra', jogador: 'John Stones', status: 0},
+            {codigo: 'ENG4', selecao: 'Inglaterra', jogador: 'Marc Guéhi', status: 0},
+            {codigo: 'ENG5', selecao: 'Inglaterra', jogador: 'Ezri Konsa', status: 0},
+            {codigo: 'ENG6', selecao: 'Inglaterra', jogador: 'Trent Alexander-Arnold', status: 0},
+            {codigo: 'ENG7', selecao: 'Inglaterra', jogador: 'Reece James', status: 0},
+            {codigo: 'ENG8', selecao: 'Inglaterra', jogador: 'Dan Burn', status: 0},
+            {codigo: 'ENG9', selecao: 'Inglaterra', jogador: 'Jordan Henderson', status: 0},
+            {codigo: 'ENG10', selecao: 'Inglaterra', jogador: 'Declan Rice', status: 0},
+            {codigo: 'ENG11', selecao: 'Inglaterra', jogador: 'Jude Bellingham', status: 0},
+            {codigo: 'ENG12', selecao: 'Inglaterra', jogador: 'Cole Palmer', status: 0},
+            {codigo: 'ENG13', selecao: 'Inglaterra', jogador: '', status: 0},
+            {codigo: 'ENG14', selecao: 'Inglaterra', jogador: 'Morgan Rogers', status: 0},
+            {codigo: 'ENG15', selecao: 'Inglaterra', jogador: 'Anthony Gordon', status: 0},
+            {codigo: 'ENG16', selecao: 'Inglaterra', jogador: 'Phil Foden', status: 0},
+            {codigo: 'ENG17', selecao: 'Inglaterra', jogador: 'Bukayo Saka', status: 0},
+            {codigo: 'ENG18', selecao: 'Inglaterra', jogador: 'Harry Kane', status: 0},
+            {codigo: 'ENG19', selecao: 'Inglaterra', jogador: 'Marcus Rashford', status: 0},
+            {codigo: 'ENG20', selecao: 'Inglaterra', jogador: 'Ollie Watkins', status: 0},
+            {codigo: 'CRO1', selecao: 'Croatia', jogador: '', status: 0},
+            {codigo: 'CRO2', selecao: 'Croatia', jogador: 'Dominik Livaković', status: 0},
+            {codigo: 'CRO3', selecao: 'Croatia', jogador: 'Duje Ćaleta-Car', status: 0},
+            {codigo: 'CRO4', selecao: 'Croatia', jogador: 'Joško Gvardiol', status: 0},
+            {codigo: 'CRO5', selecao: 'Croatia', jogador: 'Josip Stanišić', status: 0},
+            {codigo: 'CRO6', selecao: 'Croatia', jogador: 'Luka Vušković', status: 0},
+            {codigo: 'CRO7', selecao: 'Croatia', jogador: 'Josip Šutalo', status: 0},
+            {codigo: 'CRO8', selecao: 'Croatia', jogador: 'Kristijan Jakić', status: 0},
+            {codigo: 'CRO9', selecao: 'Croatia', jogador: 'Luka Modrić', status: 0},
+            {codigo: 'CRO10', selecao: 'Croatia', jogador: 'Mateo Kovačić', status: 0},
+            {codigo: 'CRO11', selecao: 'Croatia', jogador: 'Martin Baturina', status: 0},
+            {codigo: 'CRO12', selecao: 'Croatia', jogador: 'Lovro Majer', status: 0},
+            {codigo: 'CRO13', selecao: 'Croatia', jogador: '', status: 0},
+            {codigo: 'CRO14', selecao: 'Croatia', jogador: 'Mario Pašalić', status: 0},
+            {codigo: 'CRO15', selecao: 'Croatia', jogador: 'Petar Sučić', status: 0},
+            {codigo: 'CRO16', selecao: 'Croatia', jogador: 'Ivan Perišić', status: 0},
+            {codigo: 'CRO17', selecao: 'Croatia', jogador: 'Marco Pašalić', status: 0},
+            {codigo: 'CRO18', selecao: 'Croatia', jogador: 'Ante Budimir', status: 0},
+            {codigo: 'CRO19', selecao: 'Croatia', jogador: 'Andrej Kramarić', status: 0},
+            {codigo: 'CRO20', selecao: 'Croatia', jogador: 'Franjo Ivanović', status: 0},
+            {codigo: 'GHA1', selecao: 'Gana', jogador: '', status: 0},
+            {codigo: 'GHA2', selecao: 'Gana', jogador: 'Lawrence Ati Zigi', status: 0},
+            {codigo: 'GHA3', selecao: 'Gana', jogador: 'Tariq Lamptey', status: 0},
+            {codigo: 'GHA4', selecao: 'Gana', jogador: 'Mohammed Salisu', status: 0},
+            {codigo: 'GHA5', selecao: 'Gana', jogador: 'Alidu Seidu', status: 0},
+            {codigo: 'GHA6', selecao: 'Gana', jogador: 'Alexander Djiku', status: 0},
+            {codigo: 'GHA7', selecao: 'Gana', jogador: 'Gideon Mensah', status: 0},
+            {codigo: 'GHA8', selecao: 'Gana', jogador: 'Caleb Yirenkyi', status: 0},
+            {codigo: 'GHA9', selecao: 'Gana', jogador: 'Abdul Fatawu Issahaku', status: 0},
+            {codigo: 'GHA10', selecao: 'Gana', jogador: 'Thomas Partey', status: 0},
+            {codigo: 'GHA11', selecao: 'Gana', jogador: 'Salis Abdul Samed', status: 0},
+            {codigo: 'GHA12', selecao: 'Gana', jogador: 'Kamaldeen Sulemana', status: 0},
+            {codigo: 'GHA13', selecao: 'Gana', jogador: '', status: 0},
+            {codigo: 'GHA14', selecao: 'Gana', jogador: 'Mohammed Kudus', status: 0},
+            {codigo: 'GHA15', selecao: 'Gana', jogador: 'Iñaki Williams', status: 0},
+            {codigo: 'GHA16', selecao: 'Gana', jogador: 'Jordan Ayew', status: 0},
+            {codigo: 'GHA17', selecao: 'Gana', jogador: 'André Ayew', status: 0},
+            {codigo: 'GHA18', selecao: 'Gana', jogador: 'Joseph Paintsil', status: 0},
+            {codigo: 'GHA19', selecao: 'Gana', jogador: 'Osman Bukari', status: 0},
+            {codigo: 'GHA20', selecao: 'Gana', jogador: 'Antoine Semenyo', status: 0},
+            {codigo: 'PAN1', selecao: 'Panama', jogador: '', status: 0},
+            {codigo: 'PAN2', selecao: 'Panama', jogador: 'Orlando Mosquera', status: 0},
+            {codigo: 'PAN3', selecao: 'Panama', jogador: 'Luis Mejía', status: 0},
+            {codigo: 'PAN4', selecao: 'Panama', jogador: 'Fidel Escobar', status: 0},
+            {codigo: 'PAN5', selecao: 'Panama', jogador: 'Andrés Andrade', status: 0},
+            {codigo: 'PAN6', selecao: 'Panama', jogador: 'Michael Amir Murillo', status: 0},
+            {codigo: 'PAN7', selecao: 'Panama', jogador: 'Eric Davis', status: 0},
+            {codigo: 'PAN8', selecao: 'Panama', jogador: 'José Córdoba', status: 0},
+            {codigo: 'PAN9', selecao: 'Panama', jogador: 'César Blackman', status: 0},
+            {codigo: 'PAN10', selecao: 'Panama', jogador: 'Cristian Martínez', status: 0},
+            {codigo: 'PAN11', selecao: 'Panama', jogador: 'Aníbal Godoy', status: 0},
+            {codigo: 'PAN12', selecao: 'Panama', jogador: 'Adalberto Carrasquilla', status: 0},
+            {codigo: 'PAN13', selecao: 'Panama', jogador: '', status: 0},
+            {codigo: 'PAN14', selecao: 'Panama', jogador: 'Édgar Bárcenas', status: 0},
+            {codigo: 'PAN15', selecao: 'Panama', jogador: 'Carlos Harvey', status: 0},
+            {codigo: 'PAN16', selecao: 'Panama', jogador: 'Ismael Díaz', status: 0},
+            {codigo: 'PAN17', selecao: 'Panama', jogador: 'José Fajardo', status: 0},
+            {codigo: 'PAN18', selecao: 'Panama', jogador: 'Cecilio Waterman', status: 0},
+            {codigo: 'PAN19', selecao: 'Panama', jogador: 'José Luis Rodríguez', status: 0},
+            {codigo: 'PAN20', selecao: 'Panama', jogador: 'Alberto Quintero', status: 0},
+            {codigo: 'CC1', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC2', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC3', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC4', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC5', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC6', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC7', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC8', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC9', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC10', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC11', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC12', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC13', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+            {codigo: 'CC14', selecao: 'Coca-Cola', jogador: 'Special', status: 0},
+        ];
+        
+        let filtradas = [...figurinhas];
+        
+        function renderizar() {
+            const container = document.getElementById('figurinhasContainer');
+            container.innerHTML = '';
+            
+            filtradas.forEach((fig, idx) => {
+                const card = document.createElement('div');
+                card.className = 'figurinha-card';
+                
+                if (fig.status === 1) {
+                    card.classList.add('tenho');
+                } else if (fig.status === 2) {
+                    card.classList.add('repetida');
+                }
+                
+                let badge = '';
+                if (fig.status === 1) {
+                    badge = '<span class="badge badge-tenho">✓</span>';
+                } else if (fig.status === 2) {
+                    badge = '<span class="badge badge-rep">Rep</span>';
+                } else {
+                    badge = '<span class="badge badge-falta">✗</span>';
+                }
+                
+                const _iso2 = {"FWC": null, "MEX": "mx", "RSA": "za", "KOR": "kr", "CZE": "cz", "CAN": "ca", "BIH": "ba", "QAT": "qa", "SUI": "ch", "BRA": "br", "MAR": "ma", "HAI": "ht", "SCO": "gb-sct", "USA": "us", "PAR": "py", "AUS": "au", "TUR": "tr", "GER": "de", "CUW": "cw", "CIV": "ci", "ECU": "ec", "NED": "nl", "JPN": "jp", "SWE": "se", "TUN": "tn", "BEL": "be", "EGY": "eg", "IRN": "ir", "NZL": "nz", "ESP": "es", "CPV": "cv", "KSA": "sa", "URU": "uy", "FRA": "fr", "SEN": "sn", "IRQ": "iq", "NOR": "no", "ARG": "ar", "ALG": "dz", "AUT": "at", "JOR": "jo", "POR": "pt", "COD": "cd", "UZB": "uz", "COL": "co", "ENG": "gb-eng", "CRO": "hr", "GHA": "gh", "PAN": "pa", "CC": null};
+                const _cod = fig.codigo.replace(/\d+$/, '');
+                const _iso = _iso2[_cod];
+                const _flagHtml = _iso ? `<img class="flag" src="https://flagcdn.com/w40/${_iso}.png" onerror="this.style.display='none'">` : '';
+                card.innerHTML = `
+                    ${_flagHtml}
+                    <div class="jogador">${fig.jogador || '-'}</div>
+                    <div class="selecao">${fig.selecao}</div>
+                    <div class="codigo">${fig.codigo}</div>
+                    <div class="badges">${badge}</div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    fig.status = fig.status === 2 ? 0 : fig.status + 1;
+                    renderizar();
+                    atualizar();
+                    salvarDados();
+                }, false);
+                
+                container.appendChild(card);
+            });
+            
+            atualizar();
+        }
+        
+        function atualizar() {
+            const total = filtradas.length;
+            const tenho = filtradas.filter(f => f.status >= 1).length;
+            const repetidas = filtradas.filter(f => f.status === 2).length;
+            const faltam = total - tenho;
+            
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('temCount').textContent = tenho;
+            document.getElementById('faltamCount').textContent = faltam;
+            document.getElementById('repetidaCount').textContent = repetidas;
+        }
+        
+        function filtrar() {
+            const termo = document.getElementById('searchInput').value.toLowerCase();
+            const selecao = document.getElementById('paisSelect').value;
+            const status = document.getElementById('statusSelect').value;
+            
+            filtradas = figurinhas.filter(f => {
+                const matchTexto = f.codigo.toLowerCase().includes(termo) || f.jogador.toLowerCase().includes(termo);
+                const matchSelecao = !selecao || f.selecao === selecao;
+                const matchStatus = status === '' || f.status.toString() === status;
+                return matchTexto && matchSelecao && matchStatus;
+            });
+            
+            renderizar();
+        }
+        
+        // =============================================
+        // FIREBASE CONFIG — cole suas credenciais aqui
+        // =============================================
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCvoMcfTUHMrzvQ2D9ZfiUh98UygUiQtcA",
+            authDomain: "album-panini-2026-50ba8.firebaseapp.com",
+            projectId: "album-panini-2026-50ba8",
+            storageBucket: "album-panini-2026-50ba8.firebasestorage.app",
+            messagingSenderId: "81618704255",
+            appId: "1:81618704255:web:17839b4646279fc2a92c4a"
+        };
+
+        // =============================================
+
+        // Inicializar Firebase
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const db = firebase.firestore();
+        const DOC_REF = db.collection('album').doc('meu_album');
+
+        // Indicador de status sync
+        function setSyncStatus(status) {
+            const el = document.getElementById('syncStatus');
+            if (!el) return;
+            if (status === 'ok') { el.textContent = '✓ Salvo'; el.style.color = '#4caf50'; }
+            else if (status === 'saving') { el.textContent = '⏳ Salvando...'; el.style.color = '#ff9800'; }
+            else if (status === 'error') { el.textContent = '⚠️ Erro sync'; el.style.color = '#f44336'; }
+        }
+
+        // Salvar no Firebase (debounce 800ms)
+        let _saveTimer = null;
+        function salvarDados() {
+            // Salvar local também como backup
+            try { localStorage.setItem('albumPanini', JSON.stringify(figurinhas)); } catch(e) {}
+            // Salvar na nuvem
+            setSyncStatus('saving');
+            clearTimeout(_saveTimer);
+            _saveTimer = setTimeout(() => {
+                const dados = {};
+                figurinhas.forEach(f => { dados[f.codigo] = f.status; });
+                DOC_REF.set(dados)
+                    .then(() => setSyncStatus('ok'))
+                    .catch(() => setSyncStatus('error'));
+            }, 800);
+        }
+
+        // Carregar do Firebase com fallback para localStorage
+        function carregarDados() {
+            // Mostrar local enquanto carrega nuvem
+            try {
+                const local = localStorage.getItem('albumPanini');
+                if (local) {
+                    const carregadas = JSON.parse(local);
+                    figurinhas.forEach(fig => {
+                        const c = carregadas.find(f => f.codigo === fig.codigo);
+                        if (c) fig.status = c.status;
+                    });
+                    renderizar();
+                }
+            } catch(e) {}
+
+            // Carregar da nuvem (sobrescreve local se houver)
+            setSyncStatus('saving');
+            DOC_REF.get()
+                .then(doc => {
+                    if (doc.exists) {
+                        const dados = doc.data();
+                        figurinhas.forEach(fig => {
+                            if (dados[fig.codigo] !== undefined) {
+                                fig.status = dados[fig.codigo];
+                            }
+                        });
+                        renderizar();
+                        setSyncStatus('ok');
+                    } else {
+                        setSyncStatus('ok');
+                    }
+                })
+                .catch(() => {
+                    setSyncStatus('error');
+                    renderizar();
+                });
+        }
+
+        // Eventos
+        document.getElementById('searchInput').addEventListener('input', filtrar, false);
+        document.getElementById('statusSelect').addEventListener('change', filtrar, false);
+
+        // Previne comportamentos padrão do Safari
+        document.addEventListener('touchmove', function(e) {
+            if (e.target.closest('.figurinhas-grid')) { return; }
+        }, {passive: true});
+
+        
+        // Dropdown customizado de países
+        (function() {
+            const wrapper = document.getElementById('paisSelectWrapper');
+            const trigger = document.getElementById('paisTrigger');
+            const label = document.getElementById('paisLabel');
+            const hiddenInput = document.getElementById('paisSelect');
+            const options = document.querySelectorAll('#paisOptions .custom-option');
+            
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                wrapper.classList.toggle('open');
+            });
+            
+            options.forEach(opt => {
+                opt.addEventListener('click', function() {
+                    const val = this.getAttribute('data-value');
+                    hiddenInput.value = val;
+                    label.innerHTML = this.innerHTML;
+                    wrapper.classList.remove('open');
+                    filtrar();
+                });
+            });
+            
+            document.addEventListener('click', function() {
+                wrapper.classList.remove('open');
+            });
+        })();
+
+        // Inicializar
+        carregarDados();
+    </script>
+</body>
+</html>
